@@ -89,7 +89,7 @@ module.exports.updateUser = async (req, res, next) => {
         })
         .then(result => {
             console.log(result);
-            if (!result) throw new Error('Update failed');
+            if (!result[0]) throw new Error('Update failed');
             return res.status(200).json({ Message: `user ${userId} was updated` });
         })
         .catch(err => {
