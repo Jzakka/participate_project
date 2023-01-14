@@ -18,6 +18,18 @@ module.exports.getUsers = async (req, res, next) => {
     return res.status(200).json(users);
 };
 
+module.exports.getUser = async (req,res,next) => {
+    const userId = req.params.userId;
+
+    const user = await User.findByPk(userId);
+
+    if(!user){
+        return res.status(404);
+    }
+
+    return res.status(200).json(user);
+}
+
 module.exports.addUser = async (req,res,next)=>{
     const email = req.body.email;
     const username = req.body.username;

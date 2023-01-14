@@ -10,6 +10,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.post('/users', userController.addUser);
+app.get('/users/:userId', userController.getUser);
 app.get('/users', userController.getUsers);
 
 beforeEach(async () => {
@@ -48,7 +49,8 @@ describe('UserTest', () => {
                 ]);
             });
     });
-    test('getUser', async () => {
+
+    test('getUsers', async () => {
         await request(app)
             .post('/users')
             .set('Accept', 'application/json')
@@ -71,8 +73,31 @@ describe('UserTest', () => {
             .get('/users?username=testuser2')
             .expect(200)
             .then(res => {
-                console.log(res.body);
                 assert.equal(res.body.length, 1);
+            });
+    });
+
+    test('getUser-success', async () => {
+        let userId;
+        await request(app)
+            .post('/users')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test@test.com',
+                username: 'testuser',
+                password: '1234'
+            })
+            .then(res => {
+                userId = res.body.id;
+            });
+        await request(app)
+            .get('/users/' + userId)
+            .expect(200)
+            .then(res => {
+                assert.strictEqual(res.body.email, 'test@test.com');
+                assert.strictEqual(res.body.username, 'testuser');
+                assert.strictEqual(res.body.password, '1234');
             });
     });
 });
