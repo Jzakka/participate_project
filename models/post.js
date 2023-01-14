@@ -1,8 +1,14 @@
-const { Sequelize, DataTypes} = require('sequelize');
-const sequelize = require('../database/db');
-// const sequelize = new Sequelize("sqlite::memory");
+const { Sequelize, DataTypes } = require('sequelize');
 
-const post = sequelize.define('Post',{
+const post = test => {
+    let sequelize;
+    if (test) {
+        sequelize = require('../database/in-memory');
+    } else {
+        sequelize = require('../database/db');
+    }
+
+    return sequelize.define('Post', {
         title: {
             type: DataTypes.STRING(50),
             allowNull: false
@@ -19,7 +25,9 @@ const post = sequelize.define('Post',{
             type: DataTypes.INTEGER,
             allowNull: false
         }
-    },
-);
+    });
+};
+
+
 
 module.exports = post;

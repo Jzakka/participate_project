@@ -1,14 +1,21 @@
 const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = require('../database/db');
-// const sequelize = new Sequelize("sqlite::memory");
 
-const tag = sequelize.define('Tag', {
-    tagName: {
-        type: DataTypes.STRING(50),
-        allowNull: false
+const tag = test => {
+    let sequelize;
+    if (test) {
+        sequelize = require('../database/in-memory');
+    } else {
+        sequelize = require('../database/db');
     }
-}, {
-    timestamps: false
-});
+
+    return sequelize.define('Tag', {
+        tagName: {
+            type: DataTypes.STRING(50),
+            allowNull: false
+        }
+    }, {
+        timestamps: false
+    });
+};
 
 module.exports = tag;

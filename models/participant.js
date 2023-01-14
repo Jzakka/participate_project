@@ -1,12 +1,19 @@
 const { Sequelize, DataTypes} = require('sequelize');
-const sequelize = require('../database/db');
-// const sequelize = new Sequelize("sqlite::memory");
 
-const participant = sequelize.define('Participant',{
-    good: {
-        type: DataTypes.INTEGER,
-        allowNull: false
+const participant = test => {
+    let sequelize;
+    if(test){
+        sequelize = require('../database/in-memory');
+    }else{
+        sequelize = require('../database/db');
     }
-});
+    
+    return sequelize.define('Participant',{
+        good: {
+            type: DataTypes.INTEGER,
+            allowNull: false
+        }
+    });
+};
 
 module.exports = participant;

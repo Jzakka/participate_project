@@ -2,43 +2,25 @@ const express = require('express');
 
 const app = express();
 
-const sequelize = require('./database/db');
+const sequelize = require('./database/in-memory');
 
-// imports models
-const user = require('./models/user');
-const post = require('./models/post');
-const comment = require('./models/comment');
-const tag = require('./models/tag');
-const board = require('./models/board');
-const participant = require('./models/participant');
-const e = require('express');
+const { association, User } = require('./models/association/association');
 
-// association
-user.hasMany(post);
-post.belongsTo(user, {constraints: true, delete: 'CASCADE'});
-user.hasMany(participant);
-participant.belongsTo(user, {constraints: true, delete: 'CASCADE'});
-user.hasMany(comment);
-comment.belongsTo(user, {constraints: true, delete: 'CASCADE'});
+association();
 
-post.belongsToMany(tag, {through: 'postTag'});
-post.hasMany(comment);
-comment.belongsTo(post, {constraints: true, delete: 'CASCADE'});
-post.hasMany(participant);
-participant.belongsTo(post, {constraints: true, delete: 'CASCADE'});
-
-board.hasMany(post);
-post.belongsTo(board, {constraints: true, delete: 'CASCADE'});
-
-comment.hasMany(comment);
-comment.belongsTo(comment);
-
-tag.belongsToMany(post, {through: 'PostTag'});
+const user = async () => {
+    await User.create({
+        email: "test@test.com",
+        username: "testuser",
+        password: "1234"
+    });
+};
 
 sequelize
     .sync({force: true})
     .then(()=>{
         console.log('Model Sync Complete');
+        user();
         app.listen(3000);
     })
     .catch(err=>{
