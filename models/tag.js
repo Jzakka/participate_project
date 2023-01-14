@@ -1,4 +1,5 @@
-const { Sequelize, DataTypes } = require('sequelize');
+require('dotenv').config();
+const { DataTypes } = require('sequelize');
 
 const tag = test => {
     let sequelize;
@@ -12,10 +13,14 @@ const tag = test => {
         tagName: {
             type: DataTypes.STRING(50),
             allowNull: false
+        },
+        postsNumber: {
+            type: DataTypes.INTEGER,
+            allowNull: false
         }
     }, {
         timestamps: false
     });
 };
 
-module.exports = tag;
+module.exports = tag(process.env.TEST);

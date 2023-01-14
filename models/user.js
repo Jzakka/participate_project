@@ -1,4 +1,5 @@
-const { Sequelize, DataTypes} = require('sequelize');
+require('dotenv').config();
+const { DataTypes} = require('sequelize');
 
 const user = test => {
     let sequelize;
@@ -24,4 +25,4 @@ const user = test => {
     });
 };
 
-module.exports = user;
+module.exports = user(process.env.TEST);
