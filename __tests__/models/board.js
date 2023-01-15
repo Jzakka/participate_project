@@ -17,9 +17,6 @@ beforeEach(async () => {
     association();
     return await sequelize
         .sync({ force: true })
-        .then(() => {
-            console.log('Model Sync Complete');
-        })
         .catch(err => {
             console.log(err);
         });
@@ -64,14 +61,14 @@ describe('BoardTest', () => {
             .send({
                 boardName: 'NewBoard'
             })
-            .then(result => {
-                boardId = result.id;
+            .then(res => {
+                boardId = res.body.id;
             });
         await request(app)
-            .delete('/boards/'+boardId)
+            .delete('/boards/' + boardId)
             .expect(200)
-            .then(result => {
-                assert.deepStrictEqual(result.body, {Message:  'Deleted Successfull'});
+            .then(res => {
+                assert.deepStrictEqual(res.body, { Message: 'Deleted Successfull' });
             });
     });
 });
