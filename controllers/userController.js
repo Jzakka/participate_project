@@ -93,7 +93,7 @@ module.exports.updateUser = async (req, res, next) => {
             return res.status(200).json({ Message: `user ${userId} was updated` });
         })
         .catch(err => {
-            console.log(err);
+            // console.log(err);
             return res.status(404).json({ Error: 'No such user' });
         });
 };
