@@ -54,7 +54,7 @@ module.exports.deleteUser = async (req, res, next) => {
             where: { id: userId }
         })
         .then(result => {
-            console.log(result);
+            // console.log(result);
             if (!result) throw new Error('Delete failed');
             return res.status(200).json({ Message: `user ${userId} was deleted` });
         })

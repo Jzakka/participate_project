@@ -19,9 +19,6 @@ beforeEach(async () => {
     association();
     return await sequelize
         .sync({ force: true })
-        .then(() => {
-            console.log('Model Sync Complete');
-        })
         .catch(err => {
             console.log(err);
         });
