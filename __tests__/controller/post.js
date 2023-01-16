@@ -170,4 +170,34 @@ describe('PostTest', () => {
                 assert.deepStrictEqual(body, [postId2]);
             });
     });
+
+    test('getPost-success', async ()=>{
+        let postId1;
+        await request(app)
+            .post('/posts')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                title: 'TestPost',
+                userId: 1,
+                boardId: 1,
+                context: 'Anything ...',
+                tags: ['aaa', 'ccc']
+            })
+            .then(({ body }) => {
+                postId1 = body.id;
+            });
+        await request(app)
+            .get('/posts/' + postId1)
+            .expect(200)
+            .then(({body})=>{
+                assert.deepStrictEqual([
+                    body.title,
+                    body.UserId,
+                    body.BoardId,
+                    body.context,
+                    body.Tags.map(element => element.tagName)
+                ], ['TestPost', 1, 1, 'Anything ...', ['aaa', 'ccc']]);
+            });
+    });
 });
