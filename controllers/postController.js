@@ -45,29 +45,42 @@ module.exports.addPost = async (req, res, next) => {
         maxParticipants = 0;
     }
 
-    const tagObjects = tags.map(tag => {
-        return {tagName: tag};
-    });
-    console.log(tagObjects);
-    
     const post = {
         title: title,
         UserId: userId,
         BoardId: boardId,
         context: context,
         dueDate: dueDate,
-        Tags: tagObjects,
         maxParticipants: maxParticipants
     };
 
-    return await Post
-        .create( post, {
-            include: Tag
-        })
+    const tagObjects = [];
+    if (tags) {
+        for (let tag of tags) {
+            await Tag.findOrCreate({
+                where: { tagName: tag }
+            })
+                .then(([tagValue]) => {
+                    tagObjects.push(tagValue);
+                });
+        }
+    }
+    // console.log(post);
+    return Post
+        .create(post)
         .then(async newPost => {
-            // newPost.setTags(tagObjects);
-            // console.log(await newPost.getTags());
-            return res.status(200).json(newPost);
+            console.log(tagObjects);
+            return newPost
+                .setTags(tagObjects)
+                .then(()=>{
+                    console.log(newPost);
+                })
+                .then(async ()=>{
+                    console.log(await newPost.getTags());
+                })
+                .then(() => {
+                    res.status(200).json({ ...newPost.dataValues, Tags: tagObjects });
+                })
         })
         .catch(err => {
             console.log(err);
