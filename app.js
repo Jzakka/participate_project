@@ -1,28 +1,16 @@
+const bodyParser = require('body-parser');
 const express = require('express');
+const boardRouter = require('./router/boardRouter');
+const userRouter = require('./router/userRouter');
+const postRouter = require('./router/postRouter');
 
 const app = express();
 
-const sequelize = require('./database/in-memory');
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-const { association, User } = require('./models/association/association');
+app.use('/users',userRouter);
+app.use('/boards', boardRouter);
+app.use('/posts', postRouter);
 
-association();
-
-const user = async () => {
-    await User.create({
-        email: "test@test.com",
-        username: "testuser",
-        password: "1234"
-    });
-};
-
-sequelize
-    .sync({force: true})
-    .then(()=>{
-        console.log('Model Sync Complete');
-        user();
-        app.listen(3000);
-    })
-    .catch(err=>{
-        console.log(err);
-    });
+module.exports = app;

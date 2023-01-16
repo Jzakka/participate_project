@@ -43,6 +43,8 @@ module.exports.addUser = async (req, res, next) => {
         password: password
     });
 
+    // console.log(newUser);
+
     return res.status(200).json(newUser);
 };
 
@@ -59,7 +61,7 @@ module.exports.deleteUser = async (req, res, next) => {
             return res.status(200).json({ Message: `user ${userId} was deleted` });
         })
         .catch(err => {
-            console.log(err);
+            // console.log(err);
             return res.status(404).json({ Error: 'No such user' });
         });
 };

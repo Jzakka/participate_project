@@ -5,13 +5,13 @@ const Comment = require('../comment');
 const Tag = require('../tag');
 const Board = require('../board');
 const Participant = require('../participant');
+const PostTag = require('../postTag');
 
 // association
-const association = () => {
+const association = async () => {
     User.hasMany(Post);
     Post.belongsTo(User, { constraints: true, delete: 'CASCADE' });
-    User.hasMany(Participant);
-    Participant.belongsTo(User, { constraints: true, delete: 'CASCADE' });
+    User.belongsToMany(Post, {through: Participant});
     User.hasMany(Comment);
     Comment.belongsTo(User, { constraints: true, delete: 'CASCADE' });
     User.belongsToMany(Tag, { through: 'UserTag' });
@@ -19,7 +19,7 @@ const association = () => {
     Post.belongsToMany(Tag, { through: 'PostTag' });
     Post.hasMany(Comment);
     Comment.belongsTo(Post, { constraints: true, delete: 'CASCADE' });
-    Post.hasMany(Participant);
+    Post.belongsToMany(User, {through: Participant});
     Participant.belongsTo(Post, { constraints: true, delete: 'CASCADE' });
 
     Board.hasMany(Post);
@@ -29,7 +29,7 @@ const association = () => {
     Comment.hasMany(Comment);
     Comment.belongsTo(Comment);
 
-    Tag.belongsToMany(Post, { through: 'PostTag' });
+    Tag.belongsToMany(Post, { through: PostTag });
     Tag.belongsToMany(User, { through: 'UserTag' });
     Tag.belongsToMany(Board, { through: 'BoardTag' });
 };
