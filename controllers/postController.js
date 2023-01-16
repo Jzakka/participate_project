@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const Post = require('../models/post');
-const tag = require('../models/tag');
 const Tag = require('../models/tag');
+const Participant = require('../models/participant');
 const Sequelize = require('sequelize-values')();
 
 module.exports.getPosts = async (req, res, next) => {
@@ -26,8 +26,7 @@ module.exports.getPosts = async (req, res, next) => {
     if (!_.isEmpty(where)) {
         query.where = where;
     }
-    // console.log(query);
-    // console.log(tags);
+
     const posts = await Post
         .findAll(query)
         .then(foundPosts => Sequelize.getValuesDedup(foundPosts));
@@ -35,11 +34,9 @@ module.exports.getPosts = async (req, res, next) => {
     let filtered = [];
     if (tags) {
         filtered = posts.filter(post => {
-            // console.log(post);
             return tags.every(tag => {
                 const converted = post.Tags
                     .map(tagObject => tagObject.tagName);
-                // console.log(converted);
                 return converted.includes(tag);
             });
         })
@@ -85,21 +82,20 @@ module.exports.addPost = async (req, res, next) => {
                 });
         }
     }
-    // console.log(post);
     return Post
         .create(post)
         .then(async newPost => {
-            // console.log(tagObjects);
+            if(maxParticipants){
+                await Participant.create({
+                    UserId: userId,
+                    PostId: newPost.id,
+                    good: 0
+                });
+            }
             return newPost
                 .setTags(tagObjects)
-                // .then(()=>{
-                //     console.log(newPost);
-                // })
-                // .then(async ()=>{
-                //     console.log(await newPost.getTags());
-                // })
                 .then(() => {
-                    res.status(200).json({ ...newPost.dataValues, Tags: tagObjects });
+                    res.status(200).json({ ...newPost.getValues(), Tags: tagObjects });
                 })
         })
         .catch(err => {
