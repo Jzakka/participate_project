@@ -66,7 +66,7 @@ module.exports.addPost = async (req, res, next) => {
         })
         .then(async newPost => {
             // newPost.setTags(tagObjects);
-            console.log(await newPost.getTags());
+            // console.log(await newPost.getTags());
             return res.status(200).json(newPost);
         })
         .catch(err => {

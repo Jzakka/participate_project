@@ -15,11 +15,6 @@ const tag = test => {
             allowNull: false,
             unique: true
         },
-        // 함수로 얻어올 수 있지 않을까하는
-        // postsNumber: {
-        //     type: DataTypes.INTEGER,
-        //     allowNull: false
-        // }
     }, {
         timestamps: false
     });
