@@ -31,7 +31,7 @@ module.exports.getPosts = async (req, res, next) => {
         .findAll(query)
         .then(foundPosts => Sequelize.getValuesDedup(foundPosts));
 
-    let filtered = [];
+    let filtered = posts;
     if (tags) {
         filtered = posts.filter(post => {
             return tags.every(tag => {
