@@ -1,11 +1,14 @@
+const _ = require('lodash');
 const Post = require('../models/post');
+const tag = require('../models/tag');
 const Tag = require('../models/tag');
+const Sequelize = require('sequelize-values')();
 
 module.exports.getPosts = async (req, res, next) => {
     const userId = req.query.userId;
     const boardId = req.query.boardId;
     const title = req.query.title;
-    const tag = req.query.tag;
+    const tags = req.query.tag;
     const pageNumber = req.query.pageNumber ? req.query.pageNumber : 0;
     const pageSize = req.query.pageSize ? req.query.pageSize : 10;
 
@@ -14,21 +17,38 @@ module.exports.getPosts = async (req, res, next) => {
     if (boardId) { where.BoardId = +boardId; }
     if (title) { where.title = title; }
 
-    console.log(where);
-
-    const posts = await Post.findAll({
-        include: [{
-            model: Tag,
-        }],
+    const query = {
+        include: { model: Tag, attributes: ['tagName'] },
         attributes: ['id'],
-        where,
         offset: pageNumber,
         limit: pageSize
-    });
+    };
+    if (!_.isEmpty(where)) {
+        query.where = where;
+    }
+    // console.log(query);
+    // console.log(tags);
+    const posts = await Post
+        .findAll(query)
+        .then(foundPosts => Sequelize.getValuesDedup(foundPosts));
 
-    return res.status(200).json(posts);
+    let filtered = [];
+    if (tags) {
+        filtered = posts.filter(post => {
+            // console.log(post);
+            return tags.every(tag => {
+                const converted = post.Tags
+                    .map(tagObject => tagObject.tagName);
+                // console.log(converted);
+                return converted.includes(tag);
+            });
+        })
+    }
+
+    return res.status(200).json(filtered.map(element => element.id));
 };
 
+// TODO 태그와 연관 짓는 데에 너무 많은 쿼리가 나감
 module.exports.addPost = async (req, res, next) => {
     const userId = req.body.userId;
     const boardId = req.body.boardId;
@@ -69,15 +89,15 @@ module.exports.addPost = async (req, res, next) => {
     return Post
         .create(post)
         .then(async newPost => {
-            console.log(tagObjects);
+            // console.log(tagObjects);
             return newPost
                 .setTags(tagObjects)
-                .then(()=>{
-                    console.log(newPost);
-                })
-                .then(async ()=>{
-                    console.log(await newPost.getTags());
-                })
+                // .then(()=>{
+                //     console.log(newPost);
+                // })
+                // .then(async ()=>{
+                //     console.log(await newPost.getTags());
+                // })
                 .then(() => {
                     res.status(200).json({ ...newPost.dataValues, Tags: tagObjects });
                 })
