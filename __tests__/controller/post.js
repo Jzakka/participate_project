@@ -69,79 +69,105 @@ describe('PostTest', () => {
             });
     });
 
-    // test('addPost-twice', async () => {
-    //     await request(app)
-    //         .post('/posts')
-    //         .set('Accept', 'application/json')
-    //         .type('application/json')
-    //         .send({
-    //             tags: ['aaa', 'bbb', 'ccc'],
-    //             title: 'TestPost1',
-    //             userId: 1,
-    //             boardId: 1,
-    //             context: 'Anything ...',
-    //         });
-    //     await request(app)
-    //         .post('/posts')
-    //         .set('Accept', 'application/json')
-    //         .type('application/json')
-    //         .send({
-    //             tags: ['aaa', 'ccc'],
-    //             title: 'TestPost2',
-    //             userId: 1,
-    //             boardId: 1,
-    //             context: 'This is second post',
-    //         })
-    //         .expect(200)
-    //         .then(({ body }) => {
-    //             // console.log(body);
-    //             assert.deepStrictEqual({
-    //                 title: body.title,
-    //                 userId: body.UserId,
-    //                 boardId: body.BoardId,
-    //                 context: body.context,
-    //                 tags: body.Tags.map(tag => tag.tagName)
-    //             }, {
-    //                 title: 'TestPost2',
-    //                 userId: 1,
-    //                 boardId: 1,
-    //                 context: 'This is second post',
-    //                 tags: ['aaa', 'ccc']
-    //             });
-    //         });
-    // });
+    test('addPost-twice', async () => {
+        await request(app)
+            .post('/posts')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                tags: ['aaa', 'bbb', 'ccc'],
+                title: 'TestPost1',
+                userId: 1,
+                boardId: 1,
+                context: 'Anything ...',
+            });
+        await request(app)
+            .post('/posts')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                tags: ['aaa', 'ccc'],
+                title: 'TestPost2',
+                userId: 1,
+                boardId: 1,
+                context: 'This is second post',
+            })
+            .expect(200)
+            .then(({ body }) => {
+                // console.log(body);
+                assert.deepStrictEqual({
+                    title: body.title,
+                    userId: body.UserId,
+                    boardId: body.BoardId,
+                    context: body.context,
+                    tags: body.Tags.map(tag => tag.tagName)
+                }, {
+                    title: 'TestPost2',
+                    userId: 1,
+                    boardId: 1,
+                    context: 'This is second post',
+                    tags: ['aaa', 'ccc']
+                });
+            });
+    });
 
-    // test('addPost-fail', async () => {
-    //     await request(app)
-    //         .post('/posts')
-    //         .set('Accept', 'application/json')
-    //         .type('application/json')
-    //         .send({
-    //             boardId: 1,
-    //             context: 'Anything ...',
-    //         })
-    //         .expect(400)
-    //         .then(({ body }) => {
-    //             assert.strictEqual(body.Error, 'Cannot feed post');
-    //         })
-    // });
+    test('addPost-fail', async () => {
+        await request(app)
+            .post('/posts')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                boardId: 1,
+                context: 'Anything ...',
+            })
+            .expect(400)
+            .then(({ body }) => {
+                assert.strictEqual(body.Error, 'Cannot feed post');
+            })
+    });
 
-    // test('getPosts', async () => {
-    //     await request(app)
-    //         .post('/posts')
-    //         .set('Accept', 'application/json')
-    //         .type('application/json')
-    //         .send({
-    //             title: 'TestPost',
-    //             userId: 1,
-    //             boardId: 1,
-    //             context: 'Anything ...'
-    //         });
-    //     await request(app)
-    //         .get('/posts?userId=1')
-    //         .then(res => {
-    //             console.log(res.body);
-    //             assert.fail();
-    //         });
-    // });
+    test('getPosts', async () => {
+        let postId1, postId2;
+        await request(app)
+            .post('/posts')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                title: 'TestPost',
+                userId: 1,
+                boardId: 1,
+                context: 'Anything ...',
+                tags: ['aaa', 'ccc']
+            })
+            .then(({ body }) => {
+                postId1 = body.id;
+            });
+        await request(app)
+            .post('/posts')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                title: 'TestPost2',
+                userId: 1,
+                boardId: 1,
+                maxParticipants: 5,
+                context: 'Anything ......',
+                tags: ['aaa', 'ttt', 'xx']
+            })
+            .then(({ body }) => {
+                postId2 = body.id;
+            });
+        await request(app)
+            .get('/posts?tag=aaa&tag=ccc')
+            .expect(200)
+            .then(({ body }) => {
+                assert.deepStrictEqual(body, [postId1]);
+            });
+        await request(app)
+            .get('/posts?title=TestPost2')
+            .expect(200)
+            .then(({ body }) => {
+                assert.deepStrictEqual(body, [postId2]);
+            });
+    });
 });
