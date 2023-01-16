@@ -12,12 +12,14 @@ const tag = test => {
     return sequelize.define('Tag', {
         tagName: {
             type: DataTypes.STRING(50),
-            allowNull: false
+            allowNull: false,
+            unique: true
         },
-        postsNumber: {
-            type: DataTypes.INTEGER,
-            allowNull: false
-        }
+        // 함수로 얻어올 수 있지 않을까하는
+        // postsNumber: {
+        //     type: DataTypes.INTEGER,
+        //     allowNull: false
+        // }
     }, {
         timestamps: false
     });
