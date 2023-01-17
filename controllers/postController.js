@@ -4,6 +4,7 @@ const Tag = require('../models/tag');
 const Participant = require('../models/participant');
 const tag = require('../models/tag');
 const postTag = require('../models/postTag');
+const { use } = require('../app');
 const Sequelize = require('sequelize-values')();
 
 module.exports.getPosts = async (req, res, next) => {
@@ -46,7 +47,7 @@ module.exports.getPosts = async (req, res, next) => {
 
     return res.status(200).json(filtered.map(element => {
         return {
-        id: element.id, title: element.title
+            id: element.id, title: element.title
         };
     }));
 };
@@ -63,7 +64,7 @@ module.exports.getPost = async (req, res, next) => {
                 return tag.tagName;
             });
             return res.status(200).json({
-                ...foundOne.getValuesDedup(), 
+                ...foundOne.getValuesDedup(),
                 Tags: converted
             });
         })
@@ -123,7 +124,7 @@ module.exports.addPost = async (req, res, next) => {
             return newPost
                 .setTags(tagObjects)
                 .then(() => {
-                    res.status(200).json({ PostId: newPost.id,message: 'Created post successfull'});
+                    res.status(200).json({ PostId: newPost.id, message: 'Created post successfull' });
                 })
         })
         .catch(err => {
@@ -160,7 +161,7 @@ module.exports.updatePost = async (req, res, next) => {
                 });
         }
     }
-    
+
     return await Post
         .update(post, {
             where: { id: postId }
@@ -172,7 +173,7 @@ module.exports.updatePost = async (req, res, next) => {
                     return newPost
                         .setTags(tagObjects)
                         .then(() => {
-                            res.status(200).json({message: "Update post successfull"});
+                            res.status(200).json({ message: "Update post successfull" });
                         });
                 })
                 .catch(err => { throw err });
@@ -197,5 +198,62 @@ module.exports.deletePost = async (req, res, next) => {
         .catch(err => {
             console.log(err);
             return res.status(404).json({ Error: 'No such post' });
+        });
+};
+
+module.exports.participate = async (req, res, next) => {
+    const postId = req.params.postId;
+    const userId = req.session.user.id;
+    const joinOrCancel = req.query.join;
+
+    if (!joinOrCancel) {
+        return res.status(400).json({ message: "joinOrCancel is not defined" });
+    }
+
+    return await Post
+        .findByPk(postId, {
+            attributes: ['maxParticipants', 'dueDate']
+        })
+        .then(async result => {
+            const exists = await Participant.findOne(
+                {
+                    where: {
+                        PostId: postId,
+                        UserId: userId
+                    }
+                }
+            );
+            // Cancel from gather
+            if (joinOrCancel === '0') {
+                if (!exists) {
+                    throw new Error();
+                }
+                return await Participant
+                    .destroy({
+                        where: { PostId: postId, UserId: userId }
+                    })
+                    .then(() => {
+                        return res.status(200).json({ message: 'Canceled successfull' });
+                    });
+            }
+            if (new Date() > new Date(result.getValuesDedup().dueDate)) {
+                throw new Error();
+            }
+            const { count } = await Participant.findAndCountAll({
+                where: { postId: postId }
+            });
+            if (count == result.getValuesDedup().maxParticipants) {
+                throw new Error();
+            }
+            await Post.update({
+                maxParticipants: result.getValuesDedup().maxParticipants + 1
+            }, { where: { id: postId } });
+            return await Participant
+                .create({ PostId: postId, UserId: userId, good: 0 })
+                .then(() => res.status(200).json({ message: 'Joined successfull' }));
+        })
+        .catch(err => {
+            console.log(err);
+            return res.status(400).json({ message: 'An error occured. Please try again' });
         });
 };
