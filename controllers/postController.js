@@ -2,6 +2,8 @@ const _ = require('lodash');
 const Post = require('../models/post');
 const Tag = require('../models/tag');
 const Participant = require('../models/participant');
+const tag = require('../models/tag');
+const postTag = require('../models/postTag');
 const Sequelize = require('sequelize-values')();
 
 module.exports.getPosts = async (req, res, next) => {
@@ -19,7 +21,7 @@ module.exports.getPosts = async (req, res, next) => {
 
     const query = {
         include: { model: Tag, attributes: ['tagName'] },
-        attributes: ['id'],
+        attributes: ['id', 'title'],
         offset: pageNumber,
         limit: pageSize
     };
@@ -42,7 +44,11 @@ module.exports.getPosts = async (req, res, next) => {
         })
     }
 
-    return res.status(200).json(filtered.map(element => element.id));
+    return res.status(200).json(filtered.map(element => {
+        return {
+        id: element.id, title: element.title
+        };
+    }));
 };
 
 module.exports.getPost = async (req, res, next) => {
@@ -53,9 +59,18 @@ module.exports.getPost = async (req, res, next) => {
             include: Tag
         })
         .then(foundOne => {
-            return res.status(200).json(foundOne.getValues());
+            const converted = foundOne.getValues().Tags.map(tag => {
+                return tag.tagName;
+            });
+            return res.status(200).json({
+                ...foundOne.getValuesDedup(), 
+                Tags: converted
+            });
         })
-        .catch(err => res.status(404).json({ Error: 'No such post' }));
+        .catch(err => {
+            // console.log(err);
+            return res.status(404).json({ Error: 'No such post' })
+        });
 }
 
 // TODO 태그와 연관 짓는 데에 너무 많은 쿼리가 나감
@@ -108,12 +123,12 @@ module.exports.addPost = async (req, res, next) => {
             return newPost
                 .setTags(tagObjects)
                 .then(() => {
-                    res.status(200).json({ ...newPost.getValues(), Tags: tagObjects });
+                    res.status(200).json({ PostId: newPost.id,message: 'Created post successfull'});
                 })
         })
         .catch(err => {
-            console.log(err);
-            res.status(400).json({ Error: 'Cannot feed post' })
+            // console.log(err);
+            res.status(400).json({ message: 'Failed to create post' });
         });
 };
 
@@ -145,6 +160,7 @@ module.exports.updatePost = async (req, res, next) => {
                 });
         }
     }
+    
     return await Post
         .update(post, {
             where: { id: postId }
@@ -156,14 +172,30 @@ module.exports.updatePost = async (req, res, next) => {
                     return newPost
                         .setTags(tagObjects)
                         .then(() => {
-                            res.status(200).json({ ...newPost.getValues(), Tags: tagObjects });
+                            res.status(200).json({message: "Update post successfull"});
                         });
                 })
                 .catch(err => { throw err });
         })
         .catch(err => {
-            console.log(err);
-            res.status(400).json({ Error: 'Cannot update post' })
+            // console.log(err);
+            res.status(400).json({ message: 'Failed to update post' });
         });
+};
 
+module.exports.deletePost = async (req, res, next) => {
+    const postId = req.params.postId;
+
+    return await Post
+        .destroy({ where: { id: postId } })
+        .then(result => {
+            if (!result) {
+                throw new Error('No such post');
+            }
+            return res.status(200).json({ Message: 'Deleted post successful' });
+        })
+        .catch(err => {
+            console.log(err);
+            return res.status(404).json({ Error: 'No such post' });
+        });
 };
