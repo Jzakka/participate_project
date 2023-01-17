@@ -49,13 +49,13 @@ module.exports.getPost = async (req, res, next) => {
     const postId = req.params.postId;
 
     await Post
-        .findByPk(postId,{
+        .findByPk(postId, {
             include: Tag
         })
         .then(foundOne => {
             return res.status(200).json(foundOne.getValues());
         })
-        .catch(err => res.status(404).json({Error: 'No such post'}));
+        .catch(err => res.status(404).json({ Error: 'No such post' }));
 }
 
 // TODO 태그와 연관 짓는 데에 너무 많은 쿼리가 나감
@@ -115,4 +115,55 @@ module.exports.addPost = async (req, res, next) => {
             console.log(err);
             res.status(400).json({ Error: 'Cannot feed post' })
         });
+};
+
+module.exports.updatePost = async (req, res, next) => {
+    const postId = req.params.postId;
+    const title = req.body.title;
+    const tags = req.body.tags;
+    let dueDate = req.body.dueDate;
+    const context = req.body.context;
+
+    if (!dueDate) {
+        dueDate = new Date('2099-12-31');
+    }
+
+    const post = {
+        title: title,
+        context: context,
+        dueDate: dueDate,
+    };
+
+    const tagObjects = [];
+    if (tags) {
+        for (let tag of tags) {
+            await Tag.findOrCreate({
+                where: { tagName: tag }
+            })
+                .then(([tagValue]) => {
+                    tagObjects.push(tagValue);
+                });
+        }
+    }
+    return await Post
+        .update(post, {
+            where: { id: postId }
+        })
+        .then(() => {
+            return Post
+                .findByPk(postId)
+                .then(async newPost => {
+                    return newPost
+                        .setTags(tagObjects)
+                        .then(() => {
+                            res.status(200).json({ ...newPost.getValues(), Tags: tagObjects });
+                        });
+                })
+                .catch(err => { throw err });
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(400).json({ Error: 'Cannot update post' })
+        });
+
 };
