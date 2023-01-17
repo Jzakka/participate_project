@@ -171,7 +171,7 @@ describe('PostTest', () => {
             });
     });
 
-    test('getPost-success', async ()=>{
+    test('getPost-success', async () => {
         let postId1;
         await request(app)
             .post('/posts')
@@ -190,7 +190,7 @@ describe('PostTest', () => {
         await request(app)
             .get('/posts/' + postId1)
             .expect(200)
-            .then(({body})=>{
+            .then(({ body }) => {
                 assert.deepStrictEqual([
                     body.title,
                     body.UserId,
@@ -198,6 +198,68 @@ describe('PostTest', () => {
                     body.context,
                     body.Tags.map(element => element.tagName)
                 ], ['TestPost', 1, 1, 'Anything ...', ['aaa', 'ccc']]);
+            });
+    });
+
+    test('getPost-fail', async () => {
+        await request(app)
+            .get('/posts/' + 404)
+            .expect(404);
+    });
+
+    test('updatePost-success', async () => {
+        let postId1;
+        await request(app)
+            .post('/posts')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                title: 'TestPost',
+                userId: 1,
+                boardId: 1,
+                context: 'Anything ...',
+                tags: ['aaa', 'ccc']
+            })
+            .then(({ body }) => {
+                postId1 = body.id;
+            });
+        await request(app)
+            .put('/posts/' + postId1)
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                title: 'UpdatePost',
+                context: 'The context was updated',
+                tags: ['updated', 'tag']
+            })
+            .expect(200);
+        await request(app)
+            .get('/posts/' + postId1)
+            .expect(200)
+            .then(({ body }) => {
+                assert.deepStrictEqual([
+                    body.title,
+                    body.UserId,
+                    body.BoardId,
+                    body.context,
+                    body.Tags.map(element => element.tagName)
+                ], ['UpdatePost', 1, 1, 'The context was updated', ['updated', 'tag']]);
+            });
+    });
+
+    test('updatePost-fail', async () => {
+        await request(app)
+            .put('/posts/' + 404)
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .expect(400)
+            .send({
+                title: 'UpdatePost',
+                context: 'The context was updated',
+                tags: ['updated', 'tag']
+            })
+            .then(({ body }) => {
+                assert.strictEqual(body.Error, 'Cannot update post');
             });
     });
 });
