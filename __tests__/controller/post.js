@@ -20,9 +20,15 @@ beforeEach(async () => {
             email: 'test@test.com',
             username: 'testuser',
             password: '1234'
-        })
-        .then(res => {
-            // console.log(res.body.id);
+        });
+    await request(app)
+        .post('/users')
+        .set('Accept', 'application/json')
+        .type('application/json')
+        .send({
+            email: 'test2@test.com',
+            username: 'testuser2',
+            password: '1234'
         });
     return await request(app)
         .post('/boards')
@@ -193,7 +199,7 @@ describe('PostTest', () => {
                 context: 'Anything ...',
                 tags: ['aaa', 'ccc']
             })
-            .then(({body})=>{
+            .then(({ body }) => {
                 postId1 = body.PostId
             });
         await request(app)
@@ -240,7 +246,7 @@ describe('PostTest', () => {
                 tags: ['updated', 'tag']
             })
             .then(({ body }) => {
-                assert.deepStrictEqual(body, {message: 'Failed to update post'});
+                assert.deepStrictEqual(body, { message: 'Failed to update post' });
             });
     });
 
@@ -265,6 +271,144 @@ describe('PostTest', () => {
             .expect(200)
             .then(({ body }) => {
                 assert.strictEqual(body.Message, 'Deleted post successful');
+            });
+    });
+
+    test('participate-success', async () => {
+        let postId1;
+        const agent = request.agent(app);
+        await agent
+            .post('/posts')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                title: 'TestPost',
+                userId: 1,
+                boardId: 1,
+                maxParticipants: 5,
+                context: 'Anything ...',
+                tags: ['aaa', 'ccc']
+            })
+            .then(({ body }) => {
+                postId1 = body.PostId;
+            });
+        await agent
+            .post('/login')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test2@test.com',
+                password: '1234'
+            });
+        await agent
+            .put('/posts/' + postId1 + '/join?join=1')
+            .expect(200)
+            .then(({ body }) => {
+                assert.deepStrictEqual(body, { message: 'Joined successfull' });
+            });
+    });
+
+    test('participate-fail', async () => {
+        let postId1;
+        const agent = request.agent(app);
+        await agent
+            .post('/posts')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                title: 'TestPost',
+                userId: 1,
+                boardId: 1,
+                maxParticipants: 5,
+                context: 'Anything ...',
+                tags: ['aaa', 'ccc']
+            })
+            .then(({ body }) => {
+                postId1 = body.PostId;
+            });
+        await agent
+            .post('/login')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test@test.com',
+                password: '1234'
+            });
+        await agent
+            .put('/posts/' + postId1 + '/join?join=1')
+            .expect(400)
+            .then(({ body }) => {
+                assert.deepStrictEqual(body, { message: 'An error occured. Please try again' });
+            });
+    });
+
+    test('cancel-success', async () => {
+        let postId1;
+        const agent = request.agent(app);
+        await agent
+            .post('/posts')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                title: 'TestPost',
+                userId: 1,
+                boardId: 1,
+                maxParticipants: 5,
+                context: 'Anything ...',
+                tags: ['aaa', 'ccc']
+            })
+            .then(({ body }) => {
+                postId1 = body.PostId;
+            });
+        await agent
+            .post('/login')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test2@test.com',
+                password: '1234'
+            });
+        await agent
+            .put('/posts/' + postId1 + '/join?join=1');
+        await agent
+            .put('/posts/' + postId1 + '/join?join=0')
+            .expect(200)
+            .then(({ body }) => {
+                assert.deepStrictEqual(body, { message: 'Canceled successfull' });
+            });
+    });
+
+    test('cancel-fail', async () => {
+        let postId1;
+        const agent = request.agent(app);
+        await agent
+            .post('/posts')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                title: 'TestPost',
+                userId: 1,
+                boardId: 1,
+                maxParticipants: 5,
+                context: 'Anything ...',
+                tags: ['aaa', 'ccc']
+            })
+            .then(({ body }) => {
+                postId1 = body.PostId;
+            });
+        await agent
+            .post('/login')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test2@test.com',
+                password: '1234'
+            });
+        await agent
+            .put('/posts/' + postId1 + '/join?join=0')
+            .expect(400)
+            .then(({ body }) => {
+                assert.deepStrictEqual(body, { message: 'An error occured. Please try again' });
             });
     });
 });
