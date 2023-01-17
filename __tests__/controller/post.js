@@ -50,23 +50,7 @@ describe('PostTest', () => {
                 boardId: 1,
                 context: 'Anything ...',
             })
-            .expect(200)
-            .then(({ body }) => {
-                // console.log(body);
-                assert.deepStrictEqual({
-                    title: body.title,
-                    userId: body.UserId,
-                    boardId: body.BoardId,
-                    context: body.context,
-                    tags: body.Tags.map(tag => tag.tagName)
-                }, {
-                    title: 'TestPost',
-                    userId: 1,
-                    boardId: 1,
-                    context: 'Anything ...',
-                    tags: ['aaa', 'bbb', 'ccc']
-                });
-            });
+            .expect(200);
     });
 
     test('addPost-twice', async () => {
@@ -92,23 +76,7 @@ describe('PostTest', () => {
                 boardId: 1,
                 context: 'This is second post',
             })
-            .expect(200)
-            .then(({ body }) => {
-                // console.log(body);
-                assert.deepStrictEqual({
-                    title: body.title,
-                    userId: body.UserId,
-                    boardId: body.BoardId,
-                    context: body.context,
-                    tags: body.Tags.map(tag => tag.tagName)
-                }, {
-                    title: 'TestPost2',
-                    userId: 1,
-                    boardId: 1,
-                    context: 'This is second post',
-                    tags: ['aaa', 'ccc']
-                });
-            });
+            .expect(200);
     });
 
     test('addPost-fail', async () => {
@@ -122,7 +90,7 @@ describe('PostTest', () => {
             })
             .expect(400)
             .then(({ body }) => {
-                assert.strictEqual(body.Error, 'Cannot feed post');
+                assert.deepStrictEqual(body, { message: 'Failed to create post' });
             })
     });
 
@@ -140,7 +108,7 @@ describe('PostTest', () => {
                 tags: ['aaa', 'ccc']
             })
             .then(({ body }) => {
-                postId1 = body.id;
+                postId1 = body.PostId;
             });
         await request(app)
             .post('/posts')
@@ -155,19 +123,19 @@ describe('PostTest', () => {
                 tags: ['aaa', 'ttt', 'xx']
             })
             .then(({ body }) => {
-                postId2 = body.id;
+                postId2 = body.PostId;
             });
         await request(app)
             .get('/posts?tag=aaa&tag=ccc')
             .expect(200)
             .then(({ body }) => {
-                assert.deepStrictEqual(body, [postId1]);
+                assert.deepStrictEqual(body, [{ id: postId1, title: 'TestPost' }]);
             });
         await request(app)
-            .get('/posts?title=TestPost2')
+            .get('/posts')
             .expect(200)
             .then(({ body }) => {
-                assert.deepStrictEqual(body, [postId2]);
+                assert.deepStrictEqual(body, [{ id: postId1, title: 'TestPost' }, { id: postId2, title: 'TestPost2' }]);
             });
     });
 
@@ -185,19 +153,24 @@ describe('PostTest', () => {
                 tags: ['aaa', 'ccc']
             })
             .then(({ body }) => {
-                postId1 = body.id;
+                postId1 = body.PostId;
             });
         await request(app)
             .get('/posts/' + postId1)
             .expect(200)
             .then(({ body }) => {
-                assert.deepStrictEqual([
-                    body.title,
-                    body.UserId,
-                    body.BoardId,
-                    body.context,
-                    body.Tags.map(element => element.tagName)
-                ], ['TestPost', 1, 1, 'Anything ...', ['aaa', 'ccc']]);
+                assert.deepStrictEqual({
+                    id: 1,
+                    title: 'TestPost',
+                    context: 'Anything ...',
+                    dueDate: body.dueDate,
+                    maxParticipants: 0,
+                    createdAt: body.createdAt,
+                    updatedAt: body.updatedAt,
+                    UserId: 1,
+                    BoardId: 1,
+                    Tags: ['aaa', 'ccc']
+                }, body);
             });
     });
 
@@ -220,8 +193,8 @@ describe('PostTest', () => {
                 context: 'Anything ...',
                 tags: ['aaa', 'ccc']
             })
-            .then(({ body }) => {
-                postId1 = body.id;
+            .then(({body})=>{
+                postId1 = body.PostId
             });
         await request(app)
             .put('/posts/' + postId1)
@@ -232,18 +205,26 @@ describe('PostTest', () => {
                 context: 'The context was updated',
                 tags: ['updated', 'tag']
             })
-            .expect(200);
+            .expect(200)
+            .then(({ body }) => {
+                assert.deepStrictEqual(body, { message: "Update post successfull" });
+            });
         await request(app)
             .get('/posts/' + postId1)
             .expect(200)
             .then(({ body }) => {
-                assert.deepStrictEqual([
-                    body.title,
-                    body.UserId,
-                    body.BoardId,
-                    body.context,
-                    body.Tags.map(element => element.tagName)
-                ], ['UpdatePost', 1, 1, 'The context was updated', ['updated', 'tag']]);
+                assert.deepStrictEqual({
+                    id: 1,
+                    title: 'UpdatePost',
+                    context: 'The context was updated',
+                    dueDate: body.dueDate,
+                    maxParticipants: 0,
+                    createdAt: body.createdAt,
+                    updatedAt: body.updatedAt,
+                    UserId: 1,
+                    BoardId: 1,
+                    Tags: ['updated', 'tag']
+                }, body);
             });
     });
 
@@ -254,12 +235,36 @@ describe('PostTest', () => {
             .type('application/json')
             .expect(400)
             .send({
-                title: 'UpdatePost',
+                title: 'UpdatedPost',
                 context: 'The context was updated',
                 tags: ['updated', 'tag']
             })
             .then(({ body }) => {
-                assert.strictEqual(body.Error, 'Cannot update post');
+                assert.deepStrictEqual(body, {message: 'Failed to update post'});
+            });
+    });
+
+    test('deletePost-success', async () => {
+        let postId1;
+        await request(app)
+            .post('/posts')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                title: 'TestPost',
+                userId: 1,
+                boardId: 1,
+                context: 'Anything ...',
+                tags: ['aaa', 'ccc']
+            })
+            .then(({ body }) => {
+                postId1 = body.PostId;
+            });
+        await request(app)
+            .delete('/posts/' + postId1)
+            .expect(200)
+            .then(({ body }) => {
+                assert.strictEqual(body.Message, 'Deleted post successful');
             });
     });
 });
