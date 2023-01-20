@@ -193,9 +193,35 @@ describe('CommentTest', () => {
             })
             .expect(200);
         await request(app)
-            .get('/comments?postId=1&userId=1')
+            .get('/comments/'+commentId1)
+            .expect(200)
             .then(({body})=>{
-                assert.strictEqual(body[0].context, 'Updated Comment');
+                body.should.have.value('context', 'Updated Comment');
+            });
+    });
+    test('deleteComment', async ()=>{
+        let commentId1;
+        await request(app)
+            .post('/comments')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                postId: 1,
+                userId: 1,
+                context: 'This is comment1'
+            })
+            .then(({ body }) => { commentId1 = body.CommentId; });
+        await request(app)
+            .put('/comments/'+commentId1)
+            .send({
+                deleted: 'Y'
+            })
+            .expect(200);
+        await request(app)
+            .get('/comments/'+commentId1)
+            .expect(200)
+            .then(({body})=>{
+                body.should.have.value('deleted', 'Y');
             });
     });
 });
