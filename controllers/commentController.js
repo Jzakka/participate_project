@@ -82,3 +82,50 @@ module.exports.getComments = async (req, res, next) => {
             });
         });
 };
+
+module.exports.getComment = async (req, res, next) => {
+    const commentId  = req.params.commentId;
+
+    return await Comment
+        .findByPk(commentId,{
+            include: Comment
+        })
+        .then(result => {
+            if(!result) throw new Error();
+            return res.status(200).json(result.getValues());
+        })
+        .catch(err=>res.status(404).json({message: 'No such comment'}));
+};
+
+module.exports.updateComment = async (req,res,next)=>{
+    const commentId = req.params.commentId;
+    const context = req.body.context;
+    const deleted = req.body.deleted;
+
+    const query = {};
+    if(context){
+        query.context = context;
+    }
+    if(deleted){
+        query.deleted = deleted;
+    }
+
+    return await Comment
+        .update(query, {
+            where:{
+                id:commentId
+            }
+        })
+        .then(result => {
+            if(!result) throw new Error();
+            return res.status(200).json({
+                message: 'Updated comment successfull'
+            });
+        })
+        .catch(err=>{
+            console.log(err);
+            return res.status(400).json({
+                message: 'Failed to update comment'
+            });
+        });
+};
