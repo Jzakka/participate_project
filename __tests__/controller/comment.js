@@ -1,8 +1,9 @@
 const request = require('supertest');
 const assert = require('assert');
+const should = require('should');
+
 const association = require('../../models/association/association');
 const sequelize = require('../../database/in-memory');
-
 const app = require('../../app');
 
 beforeEach(async () => {
@@ -76,7 +77,7 @@ describe('CommentTest', () => {
                 userId: 1,
                 context: 'This is comment'
             })
-            .then(({body})=>{
+            .then(({ body }) => {
                 // console.log(body);
                 commentId = body.CommentId;
             });
@@ -91,5 +92,91 @@ describe('CommentTest', () => {
                 context: 'SubComments'
             })
             .expect(200);
-    })
+    });
+    test('getComments', async () => {
+        let commentId1, commentId2;
+        await request(app)
+            .post('/comments')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                postId: 1,
+                userId: 1,
+                context: 'This is comment1'
+            })
+            .then(({ body }) => { commentId1 = body.CommentId });
+        await request(app)
+            .post('/comments')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                commentId: commentId1,
+                postId: 1,
+                userId: 1,
+                context: 'SubComments'
+            });
+        await request(app)
+            .post('/comments')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                postId: 1,
+                userId: 1,
+                context: 'This is comment2'
+            })
+            .then(({ body }) => { commentId2 = body.CommentId });;
+        await request(app)
+            .post('/comments')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                commentId: commentId2,
+                postId: 1,
+                userId: 1,
+                context: 'SubComments2'
+            });
+        await request(app)
+            .post('/comments')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                commentId: commentId2,
+                postId: 1,
+                userId: 1,
+                context: 'SubComments3'
+            });
+        await request(app)
+            .get('/comments?postId=1')
+            .expect(200);
+        await request(app)
+            .get('/comments?commentId=' + commentId2)
+            .expect(200)
+            .then(({ body }) => {
+                body.map(({context})=>context).should.containDeep(['SubComments2', 'SubComments3']);
+            });
+    });
+    test('updateComments', async ()=>{
+        let commentId1;
+        await request(app)
+            .post('/comments')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                postId: 1,
+                userId: 1,
+                context: 'This is comment1'
+            })
+            .then(({ body }) => { commentId1 = body.CommentId });
+        await request(app)
+            .put('/comments/'+commentId1)
+            .send({
+                context: 'Updated Comment'
+            })
+            .expect(200);
+        await request(app)
+            .get('/comments?postId=1&userId=1')
+            .then(({body})=>{
+                assert.strictEqual(body[0].context, 'Updated Comment');
+            });
+    });
 });
