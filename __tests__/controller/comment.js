@@ -104,7 +104,7 @@ describe('CommentTest', () => {
                 userId: 1,
                 context: 'This is comment1'
             })
-            .then(({ body }) => { commentId1 = body.CommentId });
+            .then(({ body }) => { commentId1 = body.CommentId; });
         await request(app)
             .post('/comments')
             .set('Accept', 'application/json')
@@ -124,7 +124,7 @@ describe('CommentTest', () => {
                 userId: 1,
                 context: 'This is comment2'
             })
-            .then(({ body }) => { commentId2 = body.CommentId });;
+            .then(({ body }) => { commentId2 = body.CommentId; });;
         await request(app)
             .post('/comments')
             .set('Accept', 'application/json')
@@ -155,6 +155,25 @@ describe('CommentTest', () => {
                 body.map(({context})=>context).should.containDeep(['SubComments2', 'SubComments3']);
             });
     });
+    test('getComment', async ()=>{
+        let commentId1;
+        await request(app)
+            .post('/comments')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                postId: 1,
+                userId: 1,
+                context: 'This is comment1'
+            })
+            .then(({ body }) => { commentId1 = body.CommentId; });
+        await request(app)
+            .get('/comments/'+commentId1)
+            .expect(200)
+            .then(({body})=>{
+                body.should.have.value('context', 'This is comment1');
+            });
+    });
     test('updateComments', async ()=>{
         let commentId1;
         await request(app)
@@ -166,7 +185,7 @@ describe('CommentTest', () => {
                 userId: 1,
                 context: 'This is comment1'
             })
-            .then(({ body }) => { commentId1 = body.CommentId });
+            .then(({ body }) => { commentId1 = body.CommentId; });
         await request(app)
             .put('/comments/'+commentId1)
             .send({
