@@ -30,12 +30,12 @@ module.exports.addComment = async (req, res, next) => {
                 if (!result) {
                     return res.status(400).json({ message: 'Failed to create comment' });
                 }
-                if(parent){
+                if (parent) {
                     await parent.addComment(result)
-                    .then(async addedResult => {
-                        // console.log(addedResult);
-                        // console.log(Sequelize.getValues((await parent.getComments())));
-                    });
+                        .then(async addedResult => {
+                            // console.log(addedResult);
+                            // console.log(Sequelize.getValues((await parent.getComments())));
+                        });
                 }
                 return res.status(200).json({
                     CommentId: result.getValuesDedup().id,
@@ -44,4 +44,41 @@ module.exports.addComment = async (req, res, next) => {
             })
     }
     return res.status(400).json({ message: 'Failed to create comment' });
+};
+
+module.exports.getComments = async (req, res, next) => {
+    const postId = req.query.postId;
+    const userId = req.query.userId;
+    const commentId = req.query.commentId;
+    const pageNumber = req.query.pageNumber ? req.query.pageNumber : 0;
+    const pageSize = req.query.pageSize ? req.query.pageSize : 10;
+    const where = {};
+    if (postId) {
+        where.PostId = postId;
+    }
+    if (userId) {
+        where.UserId = userId;
+    }
+    if (commentId) {
+        where.ParentId = commentId;
+    }
+
+    return await Comment
+        .findAll({
+            include: {
+                model: Comment,
+            },
+            where,
+            offset: pageNumber,
+            limit: pageSize
+        })
+        .then(result => {
+            return res.status(200).json(Sequelize.getValues(result));
+        })
+        .catch(err => {
+            console.log(err);
+            return res.status(400).json({
+                message: 'An error occured'
+            });
+        });
 };
