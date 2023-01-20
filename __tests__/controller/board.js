@@ -60,7 +60,15 @@ describe('BoardTest', () => {
             .delete('/boards/' + boardId)
             .expect(200)
             .then(res => {
-                assert.deepStrictEqual(res.body, { Message: 'Deleted Successfull' });
+                assert.deepStrictEqual(res.body, { message: 'Deleted board successfull' });
+            });
+    });
+    test('deleteBoard-fail', async () => {
+        await request(app)
+            .delete('/boards/' + 404)
+            .expect(404)
+            .then(res => {
+                assert.deepStrictEqual(res.body, { message: 'Failed to delete board' });
             });
     });
 });
