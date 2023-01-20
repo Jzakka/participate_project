@@ -17,13 +17,13 @@ module.exports.getBoards = async (req, res, next) => {
 module.exports.addBoard = async (req, res, next) => {
     const boardName = req.body.boardName;
     // console.log(boardName);
-
+    
     const newBoard = await Board.create({ boardName: boardName });
 
     if (!newBoard) {
-        return res.status(400).json({ Error: 'Cannot create board' });
+        return res.status(400).json({ message: 'Failed to create board' });
     }
-    return res.status(200).json(newBoard);
+    return res.status(200).json({id:newBoard.id, boardName:newBoard.boardName});
 };
 
 module.exports.deleteBoard = async (req, res, next) => {
@@ -35,9 +35,9 @@ module.exports.deleteBoard = async (req, res, next) => {
             if (!result) {
                 throw new Error('No Such boardId');
             }
-            return res.status(200).json({ Message: 'Deleted Successfull' });
+            return res.status(200).json({ message: 'Deleted board successfull' });
         })
         .catch(err => {
-            return res.status(404).json({ Error: 'Cannot delete board' });
+            return res.status(404).json({ message: 'Failed to delete board' });
         });
 };
