@@ -26,8 +26,9 @@ const association = async () => {
     Post.belongsTo(Board, { constraints: true, delete: 'CASCADE' });
     Board.belongsToMany(Tag, { through: 'BoardTag' });
 
-    Comment.hasMany(Comment);
-    Comment.belongsTo(Comment);
+    Comment.hasMany(Comment, {
+        foreignKey: 'ParentId', useJunctionTable: false
+    });
 
     Tag.belongsToMany(Post, { through: PostTag });
     Tag.belongsToMany(User, { through: 'UserTag' });

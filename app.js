@@ -6,6 +6,7 @@ const boardRouter = require('./router/boardRouter');
 const userRouter = require('./router/userRouter');
 const postRouter = require('./router/postRouter');
 const loginRouter = require('./router/loginRouter');
+const commentRouter = require('./router/commentRouter');
 
 const app = express();
 
@@ -28,5 +29,6 @@ app.use(loginRouter);
 app.use('/users',userRouter);
 app.use('/boards', boardRouter);
 app.use('/posts', postRouter);
+app.use('/comments', commentRouter);
 
 module.exports = app;

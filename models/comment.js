@@ -17,6 +17,9 @@ const comment = test => {
         deleted: {
             type: DataTypes.BOOLEAN,
             allowNull: false
+        },
+        ParentId: {
+            type: DataTypes.INTEGER
         }
     });
 };

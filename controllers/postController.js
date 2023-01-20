@@ -2,9 +2,6 @@ const _ = require('lodash');
 const Post = require('../models/post');
 const Tag = require('../models/tag');
 const Participant = require('../models/participant');
-const tag = require('../models/tag');
-const postTag = require('../models/postTag');
-const { use } = require('../app');
 const Sequelize = require('sequelize-values')();
 
 module.exports.getPosts = async (req, res, next) => {
