@@ -16,7 +16,7 @@ beforeEach(async () => {
 });
 
 describe('UserTest', () => {
-    test('addUser', async () => {
+    test('addUser-success', async () => {
         await request(app)
             .post('/users')
             .set('Accept', 'application/json')
@@ -24,23 +24,52 @@ describe('UserTest', () => {
             .send({
                 email: 'test@test.com',
                 username: 'testuser',
-                password: '1234'
+                password: '1234',
+                confirmPassword: '1234'
             })
-            .expect(200)
-            .then(res => {
-                assert.deepStrictEqual([
-                    res.body.email,
-                    res.body.username,
-                    res.body.password
-                ], [
-                    'test@test.com',
-                    'testuser',
-                    '1234'
-                ]);
+            .expect(200);
+    });
+
+    test('addUser-fail-password-not-match', async () => {
+        await request(app)
+            .post('/users')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test@test.com',
+                username: 'testuser',
+                password: '1234',
+                confirmPassword: '1241'
+            })
+            .expect(400);
+    });
+
+    test('addUser-fail-email-already-used', async () => {
+        await request(app)
+            .post('/users')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test@test.com',
+                username: 'testuser',
+                password: '1234',
+                confirmPassword: '1234'
             });
+        await request(app)
+            .post('/users')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test@test.com',
+                username: 'testuser',
+                password: '1234',
+                confirmPassword: '1234'
+            })
+            .expect(400);
     });
 
     test('getUsers', async () => {
+        let userId;
         await request(app)
             .post('/users')
             .set('Accept', 'application/json')
@@ -48,7 +77,8 @@ describe('UserTest', () => {
             .send({
                 email: 'test@test.com',
                 username: 'testuser',
-                password: '1234'
+                password: '1234',
+                confirmPassword: '1234'
             });
         await request(app)
             .post('/users')
@@ -57,13 +87,23 @@ describe('UserTest', () => {
             .send({
                 email: 'test2@test.com',
                 username: 'testuser2',
-                password: '1234'
+                password: '1234',
+                confirmPassword: '1234'
+            })
+            .then(({ body }) => {
+                userId = body.UserId;
             });
         await request(app)
             .get('/users?username=testuser2')
             .expect(200)
-            .then(res => {
-                assert.equal(res.body.length, 1);
+            .then(({ body }) => {
+                assert.deepStrictEqual(
+                    body, [{
+                        id: userId,
+                        username: 'testuser2',
+                        email: 'test2@test.com'
+                    }]
+                );
             });
     });
 
@@ -76,18 +116,23 @@ describe('UserTest', () => {
             .send({
                 email: 'test@test.com',
                 username: 'testuser',
-                password: '1234'
+                password: '1234',
+                confirmPassword: '1234'
             })
+            .expect(200)
             .then(res => {
-                userId = res.body.id;
+                userId = res.body.UserId;
             });
         await request(app)
             .get('/users/' + userId)
             .expect(200)
-            .then(res => {
-                assert.strictEqual(res.body.email, 'test@test.com');
-                assert.strictEqual(res.body.username, 'testuser');
-                assert.strictEqual(res.body.password, '1234');
+            .then(({body})=>{
+                assert.deepStrictEqual(body,{
+                    id: userId,
+                    email: 'test@test.com',
+                    username: 'testuser',
+                    Tags: []
+                });
             });
     });
 
@@ -110,16 +155,17 @@ describe('UserTest', () => {
             .send({
                 email: 'test@test.com',
                 username: 'testuser',
-                password: '1234'
+                password: '1234',
+                confirmPassword: '1234'
             })
             .then(res => {
-                userId = res.body.id;
+                userId = res.body.UserId;
             });
         await request(app)
             .delete('/users/' + userId)
             .expect(200)
             .then(res => {
-                assert.equal(res.body.Message, `user ${userId} was deleted`);
+                assert.equal(res.body.Message, 'Deleted user successfull');
             });
     });
 
@@ -150,10 +196,11 @@ describe('UserTest', () => {
             .send({
                 email: 'test@test.com',
                 username: 'testuser',
-                password: '1234'
+                password: '1234',
+                confirmPassword: '1234'
             })
             .then(res => {
-                userId = res.body.id;
+                userId = res.body.UserId;
             });
         await request(app)
             .put('/users/' + userId)
@@ -165,20 +212,18 @@ describe('UserTest', () => {
             })
             .expect(200)
             .then(res => {
-                assert.equal(res.body.Message, `user ${userId} was updated`);
+                assert.equal(res.body.Message, 'Updated user successfull');
             });
         await request(app)
             .get('/users/' + userId)
             .expect(200)
-            .then(res => {
-                assert.deepStrictEqual([
-                        res.body.email,
-                        res.body.username,
-                        res.body.password], [
-                        'test@test.com',
-                        'pikachu',
-                        '9999'
-                    ]);
+            .then(({body}) => {
+                assert.deepStrictEqual(body, {
+                    id: userId,
+                    email: 'test@test.com',
+                    username: 'pikachu',
+                    Tags: []
+                });
             });
     });
 
