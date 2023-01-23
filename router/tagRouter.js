@@ -5,4 +5,6 @@ const router = express.Router();
 
 router.get('/', tagController.getTags);
 
+router.post('/', tagController.addTag);
+
 module.exports = router;

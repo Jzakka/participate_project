@@ -46,5 +46,14 @@ module.exports.addTag = async (req,res,next)=>{
     const tagName =  req.body.tagName; 
 
     return await Tag
-        .findOrCreate()
+        .create({
+            tagName: tagName
+        })
+        .then(result => {
+            return res.status(200).json({message: 'Created Tag successfull'});
+        })
+        .catch(err => {
+            console.log(err);
+            return res.status(404).json({message: "Failed to create Tag"});
+        })
 };
