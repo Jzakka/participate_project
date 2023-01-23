@@ -96,4 +96,12 @@ describe('TagTest', () => {
                 body.should.containDeep(['test', 'tags', 'forTest']);
             });
     });
+    test('addTag', async ()=>{
+        await request(app)
+            .post('/tags')
+            .send({
+                tagName: 'newTag'
+            })
+            .expect(200);
+    });
 });
