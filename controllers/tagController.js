@@ -64,7 +64,7 @@ module.exports.addTag = async (req, res, next) => {
             return found;
         })
         .then(async found => {
-            if (userId) {
+            if (boardId) {
                 await Board
                     .findByPk(boardId, {include: Tag})
                     .then(foundBoard =>{
@@ -74,7 +74,7 @@ module.exports.addTag = async (req, res, next) => {
             return found;
         })
         .then(result => {
-            return res.status(200).json({ message: 'Created Tag successfull' });
+            return res.status(201).json({ message: 'Created Tag successfull' });
         })
         .catch(err => {
             console.log(err);
