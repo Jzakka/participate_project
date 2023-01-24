@@ -27,7 +27,7 @@ describe('UserTest', () => {
                 password: '1234',
                 confirmPassword: '1234'
             })
-            .expect(200);
+            .expect(201);
     });
 
     test('addUser-fail-password-not-match', async () => {
@@ -119,7 +119,7 @@ describe('UserTest', () => {
                 password: '1234',
                 confirmPassword: '1234'
             })
-            .expect(200)
+            .expect(201)
             .then(res => {
                 userId = res.body.UserId;
             });

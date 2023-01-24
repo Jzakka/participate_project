@@ -23,7 +23,7 @@ describe('BoardTest', () => {
             .send({
                 boardName: 'NewBoard'
             })
-            .expect(200)
+            .expect(201)
             .then(result => {
                 assert.strictEqual(result.body.boardName, 'NewBoard');
             });

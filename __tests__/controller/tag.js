@@ -102,7 +102,7 @@ describe('TagTest', () => {
             .send({
                 tagName: 'newTag'
             })
-            .expect(200);
+            .expect(201);
     });
     test('user-addTag', async ()=>{
         await request(app)

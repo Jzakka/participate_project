@@ -64,7 +64,7 @@ describe('CommentTest', () => {
                 userId: 1,
                 context: 'This is comment'
             })
-            .expect(200);
+            .expect(201);
     });
     test('addComment-success-childComments', async () => {
         let commentId;
@@ -91,7 +91,7 @@ describe('CommentTest', () => {
                 userId: 1,
                 context: 'SubComments'
             })
-            .expect(200);
+            .expect(201);
     });
     test('getComments', async () => {
         let commentId1, commentId2;

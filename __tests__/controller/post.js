@@ -58,7 +58,7 @@ describe('PostTest', () => {
                 boardId: 1,
                 context: 'Anything ...',
             })
-            .expect(200);
+            .expect(201);
     });
 
     test('addPost-twice', async () => {
@@ -84,7 +84,7 @@ describe('PostTest', () => {
                 boardId: 1,
                 context: 'This is second post',
             })
-            .expect(200);
+            .expect(201);
     });
 
     test('addPost-fail', async () => {
