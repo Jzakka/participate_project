@@ -26,6 +26,10 @@ app.use(
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.get('/', (req,res,next)=>{
+    console.log('lobby');
+});
+
 app.use(loginRouter);
 app.use('/users',userRouter);
 app.use('/boards', boardRouter);

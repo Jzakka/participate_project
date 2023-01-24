@@ -1,3 +1,5 @@
+const bcrypt = require('bcrypt');
+
 const User = require('../models/user');
 const Tag = require('../models/tag');
 
@@ -54,15 +56,22 @@ module.exports.addUser = async (req, res, next) => {
         return res.status(400).json({message: 'Passwords are not match'});
     }
 
-    const newUser = await User.create({
-        username: username,
-        email: email,
-        password: password
-    });
-
-    // console.log(newUser);
-
-    return res.status(200).json({UserId: newUser.id, message: "Created user successfull"});
+    return bcrypt
+        .hash(password, 12)
+        .then(hashedPassword=>{
+            return User.create({
+                username: username,
+                email: email,
+                password: hashedPassword
+            })
+        })
+        .then(newUser=>{
+            return res.status(200).json({UserId: newUser.id, message: "Created user successfull"});
+        })
+        .catch(err=>{
+            console.log(err);
+            return res.status(400).json({message: 'Failed to create user'});
+        });
 };
 
 module.exports.deleteUser = async (req, res, next) => {

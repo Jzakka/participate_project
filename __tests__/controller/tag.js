@@ -78,7 +78,7 @@ beforeEach(async () => {
         })
         .then(({ body }) => {
             postId2 = body.PostId;
-        });;
+        });
 });
 
 describe('TagTest', () => {
