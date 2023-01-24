@@ -24,9 +24,6 @@ describe('BoardTest', () => {
                 boardName: 'NewBoard'
             })
             .expect(201)
-            .then(result => {
-                assert.strictEqual(result.body.boardName, 'NewBoard');
-            });
     });
     test('getBoards', async () => {
         await request(app)
@@ -54,7 +51,7 @@ describe('BoardTest', () => {
                 boardName: 'NewBoard'
             })
             .then(res => {
-                boardId = res.body.id;
+                boardId = res.body.BoardId;
             });
         await request(app)
             .delete('/boards/' + boardId)

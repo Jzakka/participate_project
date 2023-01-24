@@ -5,6 +5,8 @@ const sequelize = require('../../database/in-memory');
 
 const app = require('../../app');
 
+let userId1, userId2, boardId, postId1, postId2;
+
 beforeEach(async () => {
     await association();
     await sequelize
@@ -21,6 +23,9 @@ beforeEach(async () => {
             username: 'testuser',
             password: '1234',
             confirmPassword: '1234'
+        })
+        .then(({body})=>{
+            userId1 = body.UserId;
         });
     await request(app)
         .post('/users')
@@ -31,7 +36,10 @@ beforeEach(async () => {
             username: 'testuser2',
             password: '1234',
             confirmPassword: '1234'
-        });
+        })
+        .then(({body})=>{
+            userId2 = body.UserId;
+        });;
     return await request(app)
         .post('/boards')
         .set('Accept', 'application/json')
@@ -39,8 +47,8 @@ beforeEach(async () => {
         .send({
             boardName: 'NewBoard'
         })
-        .then(res => {
-            // console.log(res.body.id);
+        .then(({body})=>{
+            boardId = body.BoardId;
         });
 });
 
@@ -54,8 +62,8 @@ describe('PostTest', () => {
             .send({
                 tags: ['aaa', 'bbb', 'ccc'],
                 title: 'TestPost',
-                userId: 1,
-                boardId: 1,
+                userId: userId1,
+                boardId: boardId,
                 context: 'Anything ...',
             })
             .expect(201);
@@ -69,8 +77,8 @@ describe('PostTest', () => {
             .send({
                 tags: ['aaa', 'bbb', 'ccc'],
                 title: 'TestPost1',
-                userId: 1,
-                boardId: 1,
+                userId: userId1,
+                boardId: boardId,
                 context: 'Anything ...',
             });
         await request(app)
@@ -80,8 +88,8 @@ describe('PostTest', () => {
             .send({
                 tags: ['aaa', 'ccc'],
                 title: 'TestPost2',
-                userId: 1,
-                boardId: 1,
+                userId: userId1,
+                boardId: boardId,
                 context: 'This is second post',
             })
             .expect(201);
@@ -93,7 +101,7 @@ describe('PostTest', () => {
             .set('Accept', 'application/json')
             .type('application/json')
             .send({
-                boardId: 1,
+                boardId: boardId,
                 context: 'Anything ...',
             })
             .expect(400)
@@ -110,8 +118,8 @@ describe('PostTest', () => {
             .type('application/json')
             .send({
                 title: 'TestPost',
-                userId: 1,
-                boardId: 1,
+                userId: userId1,
+                boardId: boardId,
                 context: 'Anything ...',
                 tags: ['aaa', 'ccc']
             })
@@ -124,8 +132,8 @@ describe('PostTest', () => {
             .type('application/json')
             .send({
                 title: 'TestPost2',
-                userId: 1,
-                boardId: 1,
+                userId: userId1,
+                boardId: boardId,
                 maxParticipants: 5,
                 context: 'Anything ......',
                 tags: ['aaa', 'ttt', 'xx']
@@ -155,8 +163,8 @@ describe('PostTest', () => {
             .type('application/json')
             .send({
                 title: 'TestPost',
-                userId: 1,
-                boardId: 1,
+                userId: userId1,
+                boardId: boardId,
                 context: 'Anything ...',
                 tags: ['aaa', 'ccc']
             })
@@ -175,8 +183,8 @@ describe('PostTest', () => {
                     maxParticipants: 0,
                     createdAt: body.createdAt,
                     updatedAt: body.updatedAt,
-                    UserId: 1,
-                    BoardId: 1,
+                    UserId: userId1,
+                    BoardId: boardId,
                     Tags: ['aaa', 'ccc']
                 }, body);
             });
@@ -196,8 +204,8 @@ describe('PostTest', () => {
             .type('application/json')
             .send({
                 title: 'TestPost',
-                userId: 1,
-                boardId: 1,
+                userId: userId1,
+                boardId: boardId,
                 context: 'Anything ...',
                 tags: ['aaa', 'ccc']
             })
@@ -229,8 +237,8 @@ describe('PostTest', () => {
                     maxParticipants: 0,
                     createdAt: body.createdAt,
                     updatedAt: body.updatedAt,
-                    UserId: 1,
-                    BoardId: 1,
+                    UserId: userId1,
+                    BoardId: boardId,
                     Tags: ['updated', 'tag']
                 }, body);
             });
@@ -260,8 +268,8 @@ describe('PostTest', () => {
             .type('application/json')
             .send({
                 title: 'TestPost',
-                userId: 1,
-                boardId: 1,
+                userId: userId1,
+                boardId: boardId,
                 context: 'Anything ...',
                 tags: ['aaa', 'ccc']
             })
@@ -285,8 +293,8 @@ describe('PostTest', () => {
             .type('application/json')
             .send({
                 title: 'TestPost',
-                userId: 1,
-                boardId: 1,
+                userId: userId1,
+                boardId: boardId,
                 maxParticipants: 5,
                 context: 'Anything ...',
                 tags: ['aaa', 'ccc']
@@ -310,7 +318,7 @@ describe('PostTest', () => {
             });
     });
 
-    test('participate-fail', async () => {
+    test('participate-fail-user-already-participated', async () => {
         let postId1;
         const agent = request.agent(app);
         await agent
@@ -319,8 +327,8 @@ describe('PostTest', () => {
             .type('application/json')
             .send({
                 title: 'TestPost',
-                userId: 1,
-                boardId: 1,
+                userId: userId1,
+                boardId: boardId,
                 maxParticipants: 5,
                 context: 'Anything ...',
                 tags: ['aaa', 'ccc']
@@ -353,8 +361,8 @@ describe('PostTest', () => {
             .type('application/json')
             .send({
                 title: 'TestPost',
-                userId: 1,
-                boardId: 1,
+                userId: userId1,
+                boardId: boardId,
                 maxParticipants: 5,
                 context: 'Anything ...',
                 tags: ['aaa', 'ccc']
@@ -380,7 +388,7 @@ describe('PostTest', () => {
             });
     });
 
-    test('cancel-fail', async () => {
+    test('cancel-fail-user-not-participated', async () => {
         let postId1;
         const agent = request.agent(app);
         await agent
@@ -389,8 +397,8 @@ describe('PostTest', () => {
             .type('application/json')
             .send({
                 title: 'TestPost',
-                userId: 1,
-                boardId: 1,
+                userId: userId1,
+                boardId: boardId,
                 maxParticipants: 5,
                 context: 'Anything ...',
                 tags: ['aaa', 'ccc']

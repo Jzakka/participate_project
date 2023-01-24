@@ -6,6 +6,8 @@ const association = require('../../models/association/association');
 const sequelize = require('../../database/in-memory');
 const app = require('../../app');
 
+let userId1, userId2, boardId, postId1, postId2;
+
 beforeEach(async () => {
     await association();
     await sequelize
@@ -22,6 +24,9 @@ beforeEach(async () => {
             username: 'testuser',
             password: '1234',
             confirmPassword: '1234'
+        })
+        .then(({body})=>{
+            userId1 = body.UserId;
         });
     await request(app)
         .post('/users')
@@ -32,14 +37,20 @@ beforeEach(async () => {
             username: 'testuser2',
             password: '1234',
             confirmPassword: '1234'
-        });
+        })
+        .then(({body})=>{
+            userId2 = body.UserId;
+        });;
     await request(app)
         .post('/boards')
         .set('Accept', 'application/json')
         .type('application/json')
         .send({
             boardName: 'NewBoard'
-        });
+        })
+        .then(({body})=>{
+            boardId = body.UserId;
+        });;
     await request(app)
         .post('/posts')
         .set('Accept', 'application/json')
@@ -47,10 +58,13 @@ beforeEach(async () => {
         .send({
             tags: ['aaa', 'bbb', 'ccc'],
             title: 'TestPost1',
-            userId: 1,
-            boardId: 1,
+            userId: userId1,
+            boardId: boardId,
             context: 'Anything ...',
-        });
+        })
+        .then(({body})=>{
+            postId1 = body.PostId;
+        });;
 });
 
 describe('CommentTest', () => {
@@ -60,8 +74,8 @@ describe('CommentTest', () => {
             .set('Accept', 'application/json')
             .type('application/json')
             .send({
-                postId: 1,
-                userId: 1,
+                postId: postId1,
+                userId: userId1,
                 context: 'This is comment'
             })
             .expect(201);
@@ -73,8 +87,8 @@ describe('CommentTest', () => {
             .set('Accept', 'application/json')
             .type('application/json')
             .send({
-                postId: 1,
-                userId: 1,
+                postId: postId1,
+                userId: userId1,
                 context: 'This is comment'
             })
             .then(({ body }) => {
@@ -87,8 +101,8 @@ describe('CommentTest', () => {
             .type('application/json')
             .send({
                 commentId: commentId,
-                postId: 1,
-                userId: 1,
+                postId: postId1,
+                userId: userId1,
                 context: 'SubComments'
             })
             .expect(201);
@@ -100,8 +114,8 @@ describe('CommentTest', () => {
             .set('Accept', 'application/json')
             .type('application/json')
             .send({
-                postId: 1,
-                userId: 1,
+                postId: postId1,
+                userId: userId1,
                 context: 'This is comment1'
             })
             .then(({ body }) => { commentId1 = body.CommentId; });
@@ -111,8 +125,8 @@ describe('CommentTest', () => {
             .type('application/json')
             .send({
                 commentId: commentId1,
-                postId: 1,
-                userId: 1,
+                postId: postId1,
+                userId: userId1,
                 context: 'SubComments'
             });
         await request(app)
@@ -120,8 +134,8 @@ describe('CommentTest', () => {
             .set('Accept', 'application/json')
             .type('application/json')
             .send({
-                postId: 1,
-                userId: 1,
+                postId: postId1,
+                userId: userId1,
                 context: 'This is comment2'
             })
             .then(({ body }) => { commentId2 = body.CommentId; });;
@@ -131,8 +145,8 @@ describe('CommentTest', () => {
             .type('application/json')
             .send({
                 commentId: commentId2,
-                postId: 1,
-                userId: 1,
+                postId: postId1,
+                userId: userId1,
                 context: 'SubComments2'
             });
         await request(app)
@@ -141,8 +155,8 @@ describe('CommentTest', () => {
             .type('application/json')
             .send({
                 commentId: commentId2,
-                postId: 1,
-                userId: 1,
+                postId: postId1,
+                userId: userId1,
                 context: 'SubComments3'
             });
         await request(app)
@@ -162,8 +176,8 @@ describe('CommentTest', () => {
             .set('Accept', 'application/json')
             .type('application/json')
             .send({
-                postId: 1,
-                userId: 1,
+                postId: postId1,
+                userId: userId1,
                 context: 'This is comment1'
             })
             .then(({ body }) => { commentId1 = body.CommentId; });
@@ -181,8 +195,8 @@ describe('CommentTest', () => {
             .set('Accept', 'application/json')
             .type('application/json')
             .send({
-                postId: 1,
-                userId: 1,
+                postId: postId1,
+                userId: userId1,
                 context: 'This is comment1'
             })
             .then(({ body }) => { commentId1 = body.CommentId; });
@@ -206,8 +220,8 @@ describe('CommentTest', () => {
             .set('Accept', 'application/json')
             .type('application/json')
             .send({
-                postId: 1,
-                userId: 1,
+                postId: postId1,
+                userId: userId1,
                 context: 'This is comment1'
             })
             .then(({ body }) => { commentId1 = body.CommentId; });
