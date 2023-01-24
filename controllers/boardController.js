@@ -23,7 +23,7 @@ module.exports.addBoard = async (req, res, next) => {
     if (!newBoard) {
         return res.status(400).json({ message: 'Failed to create board' });
     }
-    return res.status(200).json({id:newBoard.id, boardName:newBoard.boardName});
+    return res.status(201).json({id:newBoard.id, boardName:newBoard.boardName});
 };
 
 module.exports.deleteBoard = async (req, res, next) => {

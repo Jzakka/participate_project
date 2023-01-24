@@ -37,7 +37,7 @@ module.exports.addComment = async (req, res, next) => {
                             // console.log(Sequelize.getValues((await parent.getComments())));
                         });
                 }
-                return res.status(200).json({
+                return res.status(201).json({
                     CommentId: result.getValuesDedup().id,
                     message: 'Created comment successfull'
                 });

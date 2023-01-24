@@ -121,7 +121,7 @@ module.exports.addPost = async (req, res, next) => {
             return newPost
                 .setTags(tagObjects)
                 .then(() => {
-                    res.status(200).json({ PostId: newPost.id, message: 'Created post successfull' });
+                    res.status(201).json({ PostId: newPost.id, message: 'Created post successfull' });
                 })
         })
         .catch(err => {

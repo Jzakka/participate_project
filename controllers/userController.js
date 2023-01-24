@@ -66,7 +66,7 @@ module.exports.addUser = async (req, res, next) => {
             })
         })
         .then(newUser=>{
-            return res.status(200).json({UserId: newUser.id, message: "Created user successfull"});
+            return res.status(201).json({UserId: newUser.id, message: "Created user successfull"});
         })
         .catch(err=>{
             console.log(err);
