@@ -30,7 +30,9 @@ module.exports.postLogin = async (req, res, next)=>{
 
 module.exports.postLogout = async (req,res, next)=>{
     req.session.destroy(err => {
-        // console.log(err);
+        if(err){
+            return res.status(400).json({message: 'Failed to logout'})
+        }
         res.redirect('/');
     });
 };
