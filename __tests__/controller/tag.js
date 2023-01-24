@@ -104,4 +104,18 @@ describe('TagTest', () => {
             })
             .expect(200);
     });
+    test('user-addTag', async ()=>{
+        await request(app)
+            .post('/tags')
+            .send({
+                userId: userId1,
+                tagName: 'newTag'
+            });
+        await request(app)
+            .get('/users/'+userId1)
+            .expect(200)
+            .then(({body})=>{
+                body.Tags.map(tag=>tag.tagName).should.containDeep(['newTag']);
+            });
+    })
 });
