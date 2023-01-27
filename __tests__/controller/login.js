@@ -58,12 +58,4 @@ describe('authTest', () => {
                 body.userId.should.equal(userId1);
             });
     });
-    test('logoutTest', redirect => {
-        const agent = request.agent(app);
-        agent
-            .put('/logout')
-            .expect('Location', '/')
-            .expect(302)
-            .end(redirect);
-    });
 });
