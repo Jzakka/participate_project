@@ -198,7 +198,7 @@ describe('PostTest', () => {
 
     test('updatePost-success', async () => {
         let postId1, token;
-        const agent = request(app);
+        const agent = request.agent(app);
         await agent
             .post('/login')
             .set('Accept', 'application/json')
@@ -261,7 +261,7 @@ describe('PostTest', () => {
 
     test('updatePost-fail', async () => {
         let token;
-        const agent = request(app);
+        const agent = request.agent(app);
         await agent
             .post('/login')
             .set('Accept', 'application/json')
@@ -292,7 +292,7 @@ describe('PostTest', () => {
 
     test('deletePost-success', async () => {
         let postId1, token;
-        const agent = request(app);
+        const agent = request.agent(app);
         await agent
             .post('/login')
             .set('Accept', 'application/json')
@@ -330,7 +330,7 @@ describe('PostTest', () => {
 
     test('deletePost-fail-not-authorized', async () => {
         let postId1
-        const agent = request(app);
+        const agent = request.agent(app);
         await agent
             .post('/posts')
             .set('Accept', 'application/json')

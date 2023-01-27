@@ -25,7 +25,7 @@ beforeEach(async () => {
             password: '1234',
             confirmPassword: '1234'
         })
-        .then(({body})=>{
+        .then(({ body }) => {
             userId1 = body.UserId;
         });
     await request(app)
@@ -38,7 +38,7 @@ beforeEach(async () => {
             password: '1234',
             confirmPassword: '1234'
         })
-        .then(({body})=>{
+        .then(({ body }) => {
             userId2 = body.UserId;
         });;
     await request(app)
@@ -48,7 +48,7 @@ beforeEach(async () => {
         .send({
             boardName: 'NewBoard'
         })
-        .then(({body})=>{
+        .then(({ body }) => {
             boardId = body.UserId;
         });;
     await request(app)
@@ -62,7 +62,7 @@ beforeEach(async () => {
             boardId: boardId,
             context: 'Anything ...',
         })
-        .then(({body})=>{
+        .then(({ body }) => {
             postId1 = body.PostId;
         });;
 });
@@ -166,10 +166,10 @@ describe('CommentTest', () => {
             .get('/comments?commentId=' + commentId2)
             .expect(200)
             .then(({ body }) => {
-                body.map(({context})=>context).should.containDeep(['SubComments2', 'SubComments3']);
+                body.map(({ context }) => context).should.containDeep(['SubComments2', 'SubComments3']);
             });
     });
-    test('getComment', async ()=>{
+    test('getComment', async () => {
         let commentId1;
         await request(app)
             .post('/comments')
@@ -182,39 +182,63 @@ describe('CommentTest', () => {
             })
             .then(({ body }) => { commentId1 = body.CommentId; });
         await request(app)
-            .get('/comments/'+commentId1)
+            .get('/comments/' + commentId1)
             .expect(200)
-            .then(({body})=>{
+            .then(({ body }) => {
                 body.should.have.value('context', 'This is comment1');
             });
     });
-    test('updateComments', async ()=>{
-        let commentId1;
-        await request(app)
-            .post('/comments')
+    test('updateComments', async () => {
+        let commentId1, token;
+        const agent = request.agent(app);
+        await agent
+            .post('/login')
             .set('Accept', 'application/json')
             .type('application/json')
+            .send({
+                email: 'test@test.com',
+                password: '1234'
+            })
+            .then(({ body }) => {
+                token = body.token;
+            });
+        await agent
+            .post('/comments')
+            .set('Authorization', 'Bearer '+token)
             .send({
                 postId: postId1,
                 userId: userId1,
                 context: 'This is comment1'
             })
             .then(({ body }) => { commentId1 = body.CommentId; });
-        await request(app)
-            .put('/comments/'+commentId1)
+        await agent
+            .put('/comments/' + commentId1)
+            .set('Authorization', 'Bearer '+token)
             .send({
                 context: 'Updated Comment'
             })
             .expect(200);
-        await request(app)
-            .get('/comments/'+commentId1)
+        await agent
+            .get('/comments/' + commentId1)
             .expect(200)
-            .then(({body})=>{
+            .then(({ body }) => {
                 body.should.have.value('context', 'Updated Comment');
             });
     });
-    test('deleteComment', async ()=>{
-        let commentId1;
+    test('deleteComment', async () => {
+        let commentId1, token;
+        const agent = request.agent(app);
+        await agent
+            .post('/login')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test@test.com',
+                password: '1234'
+            })
+            .then(({ body }) => {
+                token = body.token;
+            });
         await request(app)
             .post('/comments')
             .set('Accept', 'application/json')
@@ -226,15 +250,16 @@ describe('CommentTest', () => {
             })
             .then(({ body }) => { commentId1 = body.CommentId; });
         await request(app)
-            .put('/comments/'+commentId1)
+            .put('/comments/' + commentId1)
+            .set('Authorization', 'Bearer '+token)
             .send({
                 deleted: 'Y'
             })
             .expect(200);
         await request(app)
-            .get('/comments/'+commentId1)
+            .get('/comments/' + commentId1)
             .expect(200)
-            .then(({body})=>{
+            .then(({ body }) => {
                 body.should.have.value('deleted', 'Y');
             });
     });
