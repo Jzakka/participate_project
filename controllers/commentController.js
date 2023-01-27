@@ -135,6 +135,11 @@ module.exports.updateComment = async (req, res, next) => {
                 err.statusCode = 404;
                 throw err;
             }
+            if(result.UserId !== req.userId){
+                const err = new Error('Not Authorized');
+                err.statusCode = 401;
+                throw err;
+            }
             return Comment.update(query, { where: { id: commentId } });
         })
         .then(result => {

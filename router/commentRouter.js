@@ -1,5 +1,6 @@
 const express = require('express');
 const commentController = require('../controllers/commentController');
+const {isAuth} = require('../middleware/is-auth');
 
 const router = express.Router();
 
@@ -9,6 +10,6 @@ router.get('/', commentController.getComments);
 
 router.get('/:commentId', commentController.getComment);
 
-router.put('/:commentId', commentController.updateComment);
+router.put('/:commentId', isAuth, commentController.updateComment);
 
 module.exports = router;
