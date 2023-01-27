@@ -1,7 +1,5 @@
 const bodyParser = require('body-parser');
 const express = require('express');
-const session = require('express-session');
-const MemoryStore = require('memorystore')(session);
 const boardRouter = require('./router/boardRouter');
 const userRouter = require('./router/userRouter');
 const postRouter = require('./router/postRouter');
@@ -11,18 +9,6 @@ const tagRouter = require('./router/tagRouter');
 const articleController = require('./controllers/articleController');
 
 const app = express();
-
-app.use(
-    session({
-        secret: 'victoria secret',
-        resave: false,
-        saveUninitialized: true,
-        store: new MemoryStore({
-            checkPeriod: 3600
-        }),
-        cookie: {maxAge: 3600}
-    })
-);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
