@@ -24,7 +24,7 @@ beforeEach(async () => {
             password: '1234',
             confirmPassword: '1234'
         })
-        .then(({body})=>{
+        .then(({ body }) => {
             userId1 = body.UserId;
         });
     await request(app)
@@ -37,7 +37,7 @@ beforeEach(async () => {
             password: '1234',
             confirmPassword: '1234'
         })
-        .then(({body})=>{
+        .then(({ body }) => {
             userId2 = body.UserId;
         });;
     return await request(app)
@@ -47,7 +47,7 @@ beforeEach(async () => {
         .send({
             boardName: 'NewBoard'
         })
-        .then(({body})=>{
+        .then(({ body }) => {
             boardId = body.BoardId;
         });
 });
@@ -197,10 +197,24 @@ describe('PostTest', () => {
     });
 
     test('updatePost-success', async () => {
-        let postId1;
-        await request(app)
+        let postId1, token;
+        const agent = request(app);
+        await agent
+            .post('/login')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test@test.com',
+                password: '1234'
+            })
+            .expect(200)
+            .then(({body})=>{
+                token=body.token;
+            });
+        await agent
             .post('/posts')
             .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer '+token)
             .type('application/json')
             .send({
                 title: 'TestPost',
@@ -212,9 +226,10 @@ describe('PostTest', () => {
             .then(({ body }) => {
                 postId1 = body.PostId
             });
-        await request(app)
+        await agent
             .put('/posts/' + postId1)
             .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer '+token)
             .type('application/json')
             .send({
                 title: 'UpdatePost',
@@ -225,7 +240,7 @@ describe('PostTest', () => {
             .then(({ body }) => {
                 assert.deepStrictEqual(body, { message: "Update post successfull" });
             });
-        await request(app)
+        await agent
             .get('/posts/' + postId1)
             .expect(200)
             .then(({ body }) => {
@@ -245,24 +260,52 @@ describe('PostTest', () => {
     });
 
     test('updatePost-fail', async () => {
-        await request(app)
-            .put('/posts/' + 404)
+        let token;
+        const agent = request(app);
+        await agent
+            .post('/login')
             .set('Accept', 'application/json')
             .type('application/json')
-            .expect(400)
+            .send({
+                email: 'test@test.com',
+                password: '1234'
+            })
+            .expect(200)
+            .then(({body})=>{
+                token=body.token;
+            });
+        await agent
+            .put('/posts/' + 404)
+            .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' + token)
+            .type('application/json')
+            .expect(404)
             .send({
                 title: 'UpdatedPost',
                 context: 'The context was updated',
                 tags: ['updated', 'tag']
             })
             .then(({ body }) => {
-                assert.deepStrictEqual(body, { message: 'Failed to update post' });
+                assert.deepStrictEqual(body, { message: 'No such post' });
             });
     });
 
     test('deletePost-success', async () => {
-        let postId1;
-        await request(app)
+        let postId1, token;
+        const agent = request(app);
+        await agent
+            .post('/login')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test@test.com',
+                password: '1234'
+            })
+            .expect(200)
+            .then(({body})=>{
+                token=body.token;
+            });
+        await agent
             .post('/posts')
             .set('Accept', 'application/json')
             .type('application/json')
@@ -276,16 +319,39 @@ describe('PostTest', () => {
             .then(({ body }) => {
                 postId1 = body.PostId;
             });
-        await request(app)
+        await agent
             .delete('/posts/' + postId1)
+            .set('Authorization', 'Bearer '+token)
             .expect(200)
             .then(({ body }) => {
                 assert.strictEqual(body.Message, 'Deleted post successful');
             });
     });
 
+    test('deletePost-fail-not-authorized', async () => {
+        let postId1
+        const agent = request(app);
+        await agent
+            .post('/posts')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                title: 'TestPost',
+                userId: userId1,
+                boardId: boardId,
+                context: 'Anything ...',
+                tags: ['aaa', 'ccc']
+            })
+            .then(({ body }) => {
+                postId1 = body.PostId;
+            });
+        await agent
+            .delete('/posts/' + postId1)
+            .expect(401);
+    });
+
     test('participate-success', async () => {
-        let postId1;
+        let postId1, token;
         const agent = request.agent(app);
         await agent
             .post('/posts')
@@ -309,9 +375,14 @@ describe('PostTest', () => {
             .send({
                 email: 'test2@test.com',
                 password: '1234'
+            })
+            .expect(200)
+            .then(({body})=>{
+                token=body.token;
             });
         await agent
             .put('/posts/' + postId1 + '/join?join=1')
+            .set('Authorization', 'Bearer '+token)
             .expect(200)
             .then(({ body }) => {
                 assert.deepStrictEqual(body, { message: 'Joined successfull' });
@@ -319,7 +390,7 @@ describe('PostTest', () => {
     });
 
     test('participate-fail-user-already-participated', async () => {
-        let postId1;
+        let postId1,token;
         const agent = request.agent(app);
         await agent
             .post('/posts')
@@ -343,9 +414,14 @@ describe('PostTest', () => {
             .send({
                 email: 'test@test.com',
                 password: '1234'
+            })
+            .expect(200)
+            .then(({body})=>{
+                token=body.token;
             });
         await agent
             .put('/posts/' + postId1 + '/join?join=1')
+            .set('Authorization', 'Bearer '+token)
             .expect(400)
             .then(({ body }) => {
                 assert.deepStrictEqual(body, { message: 'An error occured. Please try again' });
@@ -353,7 +429,7 @@ describe('PostTest', () => {
     });
 
     test('cancel-success', async () => {
-        let postId1;
+        let postId1, token;
         const agent = request.agent(app);
         await agent
             .post('/posts')
@@ -377,11 +453,17 @@ describe('PostTest', () => {
             .send({
                 email: 'test2@test.com',
                 password: '1234'
+            })
+            .expect(200)
+            .then(({body})=>{
+                token=body.token;
             });
         await agent
-            .put('/posts/' + postId1 + '/join?join=1');
+            .put('/posts/' + postId1 + '/join?join=1')
+            .set('Authorization', 'Bearer '+token);
         await agent
             .put('/posts/' + postId1 + '/join?join=0')
+            .set('Authorization', 'Bearer '+token)
             .expect(200)
             .then(({ body }) => {
                 assert.deepStrictEqual(body, { message: 'Canceled successfull' });
@@ -389,7 +471,7 @@ describe('PostTest', () => {
     });
 
     test('cancel-fail-user-not-participated', async () => {
-        let postId1;
+        let postId1, token;
         const agent = request.agent(app);
         await agent
             .post('/posts')
@@ -413,9 +495,14 @@ describe('PostTest', () => {
             .send({
                 email: 'test2@test.com',
                 password: '1234'
+            })
+            .expect(200)
+            .then(({body})=>{
+                token=body.token;
             });
         await agent
             .put('/posts/' + postId1 + '/join?join=0')
+            .set('Authorization', 'Bearer '+token)
             .expect(400)
             .then(({ body }) => {
                 assert.deepStrictEqual(body, { message: 'An error occured. Please try again' });
