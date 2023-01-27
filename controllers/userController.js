@@ -16,7 +16,7 @@ module.exports.getUsers = async (req, res, next) => {
     }
     const users = await User.findAll({
         where: where,
-        attributes:['id', 'email', 'username']
+        attributes: ['id', 'email', 'username']
     });
 
     return res.status(200).json(users);
@@ -25,21 +25,22 @@ module.exports.getUsers = async (req, res, next) => {
 module.exports.getUser = async (req, res, next) => {
     const userId = req.params.userId;
 
-    return await User.findByPk(userId,{
+    return await User.findByPk(userId, {
         include: Tag,
         attributes: ['id', 'email', 'username']
     })
-    .then(user=>{
-        if (!user) {
-            throw new Error();
-        }
-        return res.status(200).json(user);
-    })
-    .catch(err => {
-        console.log(err);
-        return res.status(404).json({message: "No such User"});
-    });
-    
+        .then(user => {
+            if (!user) {
+                const err = new Error('No such user');
+                err.statusCode = 404;
+                throw err;
+            }
+            return res.status(200).json(user);
+        })
+        .catch(err => {
+            err.statusCode = err.statusCode || 500;
+            next(err);
+        });
 };
 
 module.exports.addUser = async (req, res, next) => {
@@ -48,47 +49,58 @@ module.exports.addUser = async (req, res, next) => {
     const password = req.body.password;
     const confirmPassword = req.body.confirmPassword;
 
-    if(await User.findOne({where: {email:email}})){
-        return res.status(400).json({message: 'The email is already used'});
+    if (await User.findOne({ where: { email: email } })) {
+        return res.status(400).json({ message: 'The email is already used' });
     }
 
-    if(password !== confirmPassword){
-        return res.status(400).json({message: 'Passwords are not match'});
+    if (password !== confirmPassword) {
+        return res.status(400).json({ message: 'Passwords are not match' });
     }
 
     return bcrypt
         .hash(password, 12)
-        .then(hashedPassword=>{
+        .then(hashedPassword => {
             return User.create({
                 username: username,
                 email: email,
                 password: hashedPassword
             })
         })
-        .then(newUser=>{
-            return res.status(201).json({UserId: newUser.id, message: "Created user successfull"});
+        .then(newUser => {
+            return res.status(201).json({ UserId: newUser.id, message: "Created user successfull" });
         })
-        .catch(err=>{
-            console.log(err);
-            return res.status(400).json({message: 'Failed to create user'});
+        .catch(err => {
+            err.statusCode = err.statusCode || 500;
+            next(err);
         });
 };
 
 module.exports.deleteUser = async (req, res, next) => {
     const userId = req.params.userId;
 
-    return await User
-        .destroy({
-            where: { id: userId }
+    User.findByPk(userId)
+        .then(user => {
+            if (!user) {
+                const err = new Error('No such user');
+                err.statusCode = 404;
+                throw err;
+            }
         })
         .then(result => {
-            // console.log(result);
-            if (!result) throw new Error('Delete failed');
-            return res.status(200).json({ Message: 'Deleted user successfull' });
+            return User.destroy({
+                where: { id: userId }
+            });
+        })
+        .then(result => {
+            if (!result) {
+                const err = new Error('Failed to delete user');
+                throw err;
+            }
+            return res.status(200).json({ message: 'Deleted user successfull' });
         })
         .catch(err => {
-            // console.log(err);
-            return res.status(404).json({ Error: 'No such user' });
+            err.statusCode = err.statusCode || 500;
+            next(err);
         });
 };
 
@@ -109,19 +121,31 @@ module.exports.updateUser = async (req, res, next) => {
         updatedUserInfo.password = password;
     }
 
-    return await User
-        .update(updatedUserInfo, {
-            where: {
-                id: userId
+    User.findByPk(userId)
+        .then(user => {
+            if (!user) {
+                const err = new Error('No such user');
+                err.statusCode = 404;
+                throw err;
             }
         })
         .then(result => {
-            // console.log(result);
-            if (!result[0]) throw new Error('Update failed');
-            return res.status(200).json({ Message: 'Updated user successfull' });
+            return User
+                .update(updatedUserInfo, {
+                    where: {
+                        id: userId
+                    }
+                })
+        })
+        .then(result => {
+            if (!result[0]) {
+                const err = new Error('Update failed');
+                throw err;
+            }
+            return res.status(200).json({ message: 'Updated user successfull' });
         })
         .catch(err => {
-            // console.log(err);
-            return res.status(404).json({ Error: 'No such user' });
+            err.statusCode = err.statusCode || 500;
+            next(err);
         });
 };
