@@ -92,11 +92,15 @@ describe('ArticleTest', () => {
     });
     test('getArticles-login', async () => {
         const agent = request.agent(app);
+        let token;
         await agent
             .post('/login')
             .send({
                 email:'test@test.com',
                 password: '1234'
+            })
+            .then(({body})=>{
+                token = body.token;
             });
         await agent
             .post('/tags')
@@ -118,6 +122,7 @@ describe('ArticleTest', () => {
             });
         await agent
             .get('/articles')
+            .set('Authorization', 'Bearer '+token)
             .expect(200)
             .then(({ body }) => {
                 console.log(body);
