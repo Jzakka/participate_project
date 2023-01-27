@@ -137,13 +137,9 @@ describe('UserTest', () => {
     });
 
     test('getUser-failed', async () => {
-        const res = await request(app)
+        await request(app)
             .get('/users/' + 250)
-            .set('Accept', 'application/json')
-            .type('application/json');
-
-        // console.log(res);
-        expect(res.status).toEqual(404);
+            .expect(404);
     });
 
     test('deleteUser-success', async () => {
@@ -165,7 +161,7 @@ describe('UserTest', () => {
             .delete('/users/' + userId)
             .expect(200)
             .then(res => {
-                assert.equal(res.body.Message, 'Deleted user successfull');
+                assert.equal(res.body.message, 'Deleted user successfull');
             });
     });
 
@@ -183,7 +179,7 @@ describe('UserTest', () => {
             .delete('/users/' + 404)
             .expect(404)
             .then(res => {
-                assert.equal(res.body.Error, 'No such user');
+                assert.equal(res.body.message, 'No such user');
             });
     });
 
@@ -212,7 +208,7 @@ describe('UserTest', () => {
             })
             .expect(200)
             .then(res => {
-                assert.equal(res.body.Message, 'Updated user successfull');
+                assert.equal(res.body.message, 'Updated user successfull');
             });
         await request(app)
             .get('/users/' + userId)
@@ -238,7 +234,7 @@ describe('UserTest', () => {
             })
             .expect(404)
             .then(res => {
-                assert.equal(res.body.Error, 'No such user');
+                assert.equal(res.body.message, 'No such user');
             });
     });
 });
