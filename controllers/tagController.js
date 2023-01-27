@@ -31,14 +31,14 @@ module.exports.getTags = async (req, res, next) => {
         query.include[2].where = { id: postId };
     }
 
-    return await Tag
-        .findAll()
+    Tag
+        .findAll(query)
         .then(found => {
             return res.status(200).json(found.map(tag => tag.tagName));
         })
         .catch(err => {
-            console.log(err);
-            return res.status(400).json({ message: "An error occured" });
+            err.statusCode ??= 500;
+            next(err);
         });
 };
 
@@ -47,37 +47,50 @@ module.exports.addTag = async (req, res, next) => {
     const userId = req.body.userId;
     const boardId = req.body.boardId;
 
-
-
-    return await Tag
-        .create({
-            tagName: tagName
-        })
-        .then(async found => {
-            if (userId) {
-                await User
-                    .findByPk(userId)
-                    .then(foundUser =>{
-                        foundUser.addTag(found);
-                    });
+    let createdTag;
+    Tag
+        .create({ tagName: tagName })
+        .then(created => {
+            if (!created) {
+                const err = new Error('Failed to create tag');
+                throw err;
             }
-            return found;
-        })
-        .then(async found => {
-            if (boardId) {
-                await Board
-                    .findByPk(boardId, {include: Tag})
-                    .then(foundBoard =>{
-                        foundBoard.addTag(found);
-                    });
-            }
-            return found;
+            createdTag = created;
         })
         .then(result => {
+            if (userId) {
+                return User
+                    .findByPk(userId, { include: Tag })
+                    .then(async foundUser => {
+                        if (!foundUser) {
+                            const err = new Error('No such user');
+                            err.statusCode = 404;
+                            throw err;
+                        }
+                        foundUser.addTag(createdTag);
+                    });
+            }
+        })
+        .then(result => {
+            if (boardId) {
+                return Board
+                    .findByPk(boardId, { include: Tag })
+                    .then(foundBoard => {
+                        if (!foundBoard) {
+                            const err = new Error('No such user');
+                            err.statusCode = 404;
+                            throw err;
+                        }
+                        foundBoard.addTag(createdTag);
+                    });
+            }
+        })
+        .then(result => {
+            console.log(4);
             return res.status(201).json({ message: 'Created Tag successfull' });
         })
         .catch(err => {
-            console.log(err);
-            return res.status(404).json({ message: "Failed to create Tag" });
-        })
+            err.statusCode ??= 500;
+            next(err);
+        });
 };
