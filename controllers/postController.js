@@ -176,6 +176,11 @@ module.exports.updatePost = async (req, res, next) => {
                 err.statusCode = 404;
                 throw err;
             }
+            if(result.UserId !== req.userId){
+                const err = new Error('Not authorized');
+                err.statusCode = 401;
+                throw err;
+            }
             foundPost = result;
             return Post.update(post, { where: { id: postId } });
         })
@@ -206,6 +211,11 @@ module.exports.deletePost = async (req, res, next) => {
                 err.statusCode = 404;
                 throw err;
             }
+            if(result.UserId !== req.userId){
+                const err = new Error('Not authorized');
+                err.statusCode = 401;
+                throw err;
+            }
             return Post.destroy({ where: { id: postId } });
         })
         .then(result => {
@@ -223,7 +233,7 @@ module.exports.deletePost = async (req, res, next) => {
 
 module.exports.participate = async (req, res, next) => {
     const postId = req.params.postId;
-    const userId = req.session.user.id;
+    const userId = req.userId;
     const joinOrCancel = req.query.join;
 
     if (!joinOrCancel) {
