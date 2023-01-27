@@ -16,28 +16,44 @@ module.exports.getBoards = async (req, res, next) => {
 
 module.exports.addBoard = async (req, res, next) => {
     const boardName = req.body.boardName;
-    // console.log(boardName);
-    
-    const newBoard = await Board.create({ boardName: boardName });
 
-    if (!newBoard) {
-        return res.status(400).json({ message: 'Failed to create board' });
-    }
-    return res.status(201).json({BoardId:newBoard.id, message: "Created board successfull"});
+    Board.create({ boardName: boardName })
+        .then(newBoard => {
+            if (!newBoard) {
+                const err = new Error('Failed to create board');
+                throw err;
+            }
+            res.status(201).json({ BoardId: newBoard.id, message: "Created board successfull" });
+        })
+        .catch(err => {
+            err.statusCode = err.statusCode || 500;
+            next(err);
+        });
 };
 
 module.exports.deleteBoard = async (req, res, next) => {
     const boardId = req.params.boardId;
 
-    return await Board
-        .destroy({ where: { id: boardId } })
+    Board.findByPk(boardId)
+        .then(board => {
+            if (!board) {
+                const err = new Error('Failed to delete board');
+                err.statusCode = 404;
+                throw err;
+            }
+        })
+        .then(result => {
+            return Board.destroy({ where: { id: boardId } });
+        })
         .then(result => {
             if (!result) {
-                throw new Error('No Such boardId');
+                const err = new Error('Failed to delete board');
+                throw err;
             }
             return res.status(200).json({ message: 'Deleted board successfull' });
         })
         .catch(err => {
-            return res.status(404).json({ message: 'Failed to delete board' });
+            err.statusCode = err.statusCode || 500;
+            next(err);
         });
 };
