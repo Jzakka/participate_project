@@ -43,17 +43,20 @@ beforeEach(async () => {
 });
 
 describe('authTest', () => {
-    test('loginTest', redirect => {
+    test('loginTest', async () => {
         const agent = request.agent(app);
-        agent
+        await agent
             .post('/login')
             .send({
                 email: 'test@test.com',
                 password: '1234'
             })
-            .expect('Location', '/')
-            .expect(302)
-            .end(redirect);
+            .expect(200)
+            .then(({body})=>{
+                console.log(body);
+                body.should.have.properties(['token', 'userId']);
+                body.userId.should.equal(userId1);
+            });
     });
     test('logoutTest', redirect => {
         const agent = request.agent(app);
