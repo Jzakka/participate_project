@@ -9,8 +9,8 @@ module.exports.getPosts = async (req, res, next) => {
     const boardId = req.query.boardId;
     const title = req.query.title;
     const tags = req.query.tag;
-    const pageNumber = req.query.pageNumber ? req.query.pageNumber : 0;
-    const pageSize = req.query.pageSize ? req.query.pageSize : 10;
+    const pageNumber = req.query.pageNumber ?? 0;
+    const pageSize = req.query.pageSize ?? 10;
 
     const where = {};
     if (userId) { where.UserId = +userId; }
@@ -29,7 +29,11 @@ module.exports.getPosts = async (req, res, next) => {
 
     const posts = await Post
         .findAll(query)
-        .then(foundPosts => Sequelize.getValuesDedup(foundPosts));
+        .then(foundPosts => Sequelize.getValuesDedup(foundPosts))
+        .catch(err => {
+            err.statusCode ??= 500;
+            return next(err);
+        });
 
     let filtered = posts;
     if (tags) {
@@ -51,23 +55,31 @@ module.exports.getPosts = async (req, res, next) => {
 
 module.exports.getPost = async (req, res, next) => {
     const postId = req.params.postId;
-
-    await Post
+    let foundPost;
+    Post
         .findByPk(postId, {
             include: Tag
         })
         .then(foundOne => {
-            const converted = foundOne.getValues().Tags.map(tag => {
+            if (!foundOne) {
+                const err = new Error('No such post');
+                err.statusCode = 404;
+                throw err;
+            }
+            foundPost = foundOne;
+            return foundOne.getValues().Tags.map(tag => {
                 return tag.tagName;
             });
-            return res.status(200).json({
-                ...foundOne.getValuesDedup(),
+        })
+        .then(converted => {
+            res.status(200).json({
+                ...foundPost.getValuesDedup(),
                 Tags: converted
             });
         })
         .catch(err => {
-            // console.log(err);
-            return res.status(404).json({ Error: 'No such post' })
+            err.statusCode ??= 500;
+            next(err);
         });
 }
 
@@ -77,16 +89,9 @@ module.exports.addPost = async (req, res, next) => {
     const boardId = req.body.boardId;
     const title = req.body.title;
     const tags = req.body.tags;
-    let dueDate = req.body.dueDate;
-    let maxParticipants = req.body.maxParticipants;
+    let dueDate = req.body.dueDate ?? new Date('2099-12-31');
+    let maxParticipants = req.body.maxParticipants ?? 0;
     const context = req.body.context;
-
-    if (!dueDate) {
-        dueDate = new Date('2099-12-31');
-    }
-    if (!maxParticipants) {
-        maxParticipants = 0;
-    }
 
     const post = {
         title: title,
@@ -100,33 +105,40 @@ module.exports.addPost = async (req, res, next) => {
     const tagObjects = [];
     if (tags) {
         for (let tag of tags) {
-            await Tag.findOrCreate({
-                where: { tagName: tag }
-            })
+            await Tag
+                .findOrCreate({
+                    where: { tagName: tag }
+                })
                 .then(([tagValue]) => {
                     tagObjects.push(tagValue);
                 });
         }
     }
-    return Post
+    Post
         .create(post)
-        .then(async newPost => {
+        .then(newPost => {
             if (maxParticipants) {
-                await Participant.create({
+                Participant.create({
                     UserId: userId,
                     PostId: newPost.id,
                     good: 0
-                });
-            }
-            return newPost
-                .setTags(tagObjects)
-                .then(() => {
-                    res.status(201).json({ PostId: newPost.id, message: 'Created post successfull' });
                 })
+                    .then(result => {
+                        return newPost;
+                    });
+            }
+            return newPost;
+        })
+        .then(newPost => {
+            newPost.setTags(tagObjects);
+            return newPost;
+        })
+        .then(newPost => {
+            res.status(201).json({ PostId: newPost.id, message: 'Created post successfull' });
         })
         .catch(err => {
-            // console.log(err);
-            res.status(400).json({ message: 'Failed to create post' });
+            err.statusCode ??= 500;
+            next(err);
         });
 };
 
@@ -134,12 +146,8 @@ module.exports.updatePost = async (req, res, next) => {
     const postId = req.params.postId;
     const title = req.body.title;
     const tags = req.body.tags;
-    let dueDate = req.body.dueDate;
+    let dueDate = req.body.dueDate ?? new Date('2099-12-31');
     const context = req.body.context;
-
-    if (!dueDate) {
-        dueDate = new Date('2099-12-31');
-    }
 
     const post = {
         title: title,
@@ -150,52 +158,67 @@ module.exports.updatePost = async (req, res, next) => {
     const tagObjects = [];
     if (tags) {
         for (let tag of tags) {
-            await Tag.findOrCreate({
-                where: { tagName: tag }
-            })
+            await Tag
+                .findOrCreate({
+                    where: { tagName: tag }
+                })
                 .then(([tagValue]) => {
                     tagObjects.push(tagValue);
                 });
         }
     }
 
-    return await Post
-        .update(post, {
-            where: { id: postId }
+    let foundPost;
+    Post.findByPk(postId)
+        .then(result => {
+            if (!result) {
+                const err = new Error('No such post');
+                err.statusCode = 404;
+                throw err;
+            }
+            foundPost = result;
+            return Post.update(post, { where: { id: postId } });
         })
-        .then(() => {
-            return Post
-                .findByPk(postId)
-                .then(async newPost => {
-                    return newPost
-                        .setTags(tagObjects)
-                        .then(() => {
-                            res.status(200).json({ message: "Update post successfull" });
-                        });
-                })
-                .catch(err => { throw err });
+        .then(result => {
+            if (!result[0]) {
+                const err = new Error('Failed to update post');
+                throw err;
+            }
+            foundPost
+                .setTags(tagObjects)
+                .then(() => {
+                    res.status(200).json({ message: "Update post successfull" });
+                });
         })
         .catch(err => {
-            // console.log(err);
-            res.status(400).json({ message: 'Failed to update post' });
+            err.statusCode ??= 500;
+            next(err);
         });
 };
 
 module.exports.deletePost = async (req, res, next) => {
     const postId = req.params.postId;
 
-    return await Post
-        .destroy({ where: { id: postId } })
+    Post.findByPk(postId)
         .then(result => {
             if (!result) {
-                throw new Error('No such post');
+                const err = new Error('No such post');
+                err.statusCode = 404;
+                throw err;
+            }
+            return Post.destroy({ where: { id: postId } });
+        })
+        .then(result => {
+            if (!result) {
+                const err = new Error('Failed to delete post');
+                throw err;
             }
             return res.status(200).json({ Message: 'Deleted post successful' });
         })
         .catch(err => {
-            console.log(err);
-            return res.status(404).json({ Error: 'No such post' });
-        });
+            err.statusCode ??= 500;
+            next(err);
+        }); 
 };
 
 module.exports.participate = async (req, res, next) => {
