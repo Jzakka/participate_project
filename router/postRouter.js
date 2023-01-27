@@ -1,5 +1,6 @@
 const express = require('express');
 const postController = require('../controllers/postController');
+const isAuth = require('../middleware/is-auth');
 
 const router = express.Router();
 
@@ -9,10 +10,10 @@ router.get('/:postId', postController.getPost);
 
 router.post('/', postController.addPost);
 
-router.put('/:postId', postController.updatePost);
+router.put('/:postId', isAuth, postController.updatePost);
 
-router.put('/:postId/join', postController.participate);
+router.put('/:postId/join', isAuth, postController.participate);
 
-router.delete('/:postId', postController.deletePost);
+router.delete('/:postId', isAuth, postController.deletePost);
 
 module.exports = router;
