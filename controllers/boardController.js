@@ -1,4 +1,7 @@
+require('dotenv').config();
+
 const Board = require('../models/board');
+const User = require('../models/user');
 
 module.exports.getBoards = async (req, res, next) => {
     const boardName = req.query.boardName;
@@ -14,10 +17,23 @@ module.exports.getBoards = async (req, res, next) => {
     return res.status(200).json(boards);
 };
 
-module.exports.addBoard = async (req, res, next) => {
+module.exports.addBoard = (req, res, next) => {
     const boardName = req.body.boardName;
 
-    Board.create({ boardName: boardName })
+    User.findByPk(req.userId)
+        .then(user=>{
+            if(!user){
+                const err = new Error('No such user');
+                err.statusCode = 404;
+                throw err;
+            }
+            if(process.env.ADMIN_ADDRESS !== user.email){
+                const err = new Error('Not authorized');
+                err.statusCode = 401;
+                throw err;
+            }
+            return  Board.create({ boardName: boardName });
+        })
         .then(newBoard => {
             if (!newBoard) {
                 const err = new Error('Failed to create board');
@@ -31,10 +47,23 @@ module.exports.addBoard = async (req, res, next) => {
         });
 };
 
-module.exports.deleteBoard = async (req, res, next) => {
+module.exports.deleteBoard = (req, res, next) => {
     const boardId = req.params.boardId;
 
-    Board.findByPk(boardId)
+    User.findByPk(req.userId)
+        .then(user=>{
+            if(!user){
+                const err = new Error('No such user');
+                err.statusCode = 404;
+                throw err;
+            }
+            if(process.env.ADMIN_ADDRESS !== user.email){
+                const err = new Error('Not authorized');
+                err.statusCode = 401;
+                throw err;
+            }
+            return Board.findByPk(boardId);
+        })
         .then(board => {
             if (!board) {
                 const err = new Error('Failed to delete board');
