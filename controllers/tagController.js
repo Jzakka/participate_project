@@ -44,7 +44,7 @@ module.exports.getTags = async (req, res, next) => {
 
 module.exports.addTag = async (req, res, next) => {
     const tagName = req.body.tagName;
-    const userId = req.body.userId;
+    const userId = req.userId;
     const boardId = req.body.boardId;
 
     let createdTag;
