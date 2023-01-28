@@ -6,7 +6,7 @@ const association = require('../../models/association/association');
 const sequelize = require('../../database/in-memory');
 const app = require('../../app');
 
-let userId1, userId2, boardId, postId1, postId2;
+let userId1, userId2, boardId, postId1, postId2, token;
 
 beforeEach(async () => {
     await association();
@@ -79,6 +79,17 @@ beforeEach(async () => {
         .then(({ body }) => {
             postId2 = body.PostId;
         });
+    await request(app)
+        .post('/login')
+        .set('Accept', 'application/json')
+        .type('application/json')
+        .send({
+            email: 'test@test.com',
+            password: '1234'
+        })
+        .then(({ body }) => {
+            token = body.token;
+        });
 });
 
 describe('TagTest', () => {
@@ -96,26 +107,26 @@ describe('TagTest', () => {
                 body.should.containDeep(['test', 'tags', 'forTest']);
             });
     });
-    test('addTag', async ()=>{
+    test('addTag-fail-not-auth', async () => {
         await request(app)
             .post('/tags')
             .send({
                 tagName: 'newTag'
             })
-            .expect(201);
+            .expect(401);
     });
-    test('user-addTag', async ()=>{
+    test('addTag-success', async () => {
         await request(app)
             .post('/tags')
+            .set('Authorization', 'Bearer '+token)
             .send({
-                userId: userId1,
                 tagName: 'newTag'
             });
         await request(app)
-            .get('/users/'+userId1)
+            .get('/users/' + userId1)
             .expect(200)
-            .then(({body})=>{
-                body.Tags.map(tag=>tag.tagName).should.containDeep(['newTag']);
+            .then(({ body }) => {
+                body.Tags.map(tag => tag.tagName).should.containDeep(['newTag']);
             });
     })
 });
