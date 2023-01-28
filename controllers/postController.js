@@ -176,7 +176,7 @@ module.exports.updatePost = async (req, res, next) => {
                 err.statusCode = 404;
                 throw err;
             }
-            if(result.UserId !== req.userId){
+            if (result.UserId !== req.userId) {
                 const err = new Error('Not authorized');
                 err.statusCode = 401;
                 throw err;
@@ -211,7 +211,7 @@ module.exports.deletePost = async (req, res, next) => {
                 err.statusCode = 404;
                 throw err;
             }
-            if(result.UserId !== req.userId){
+            if (result.UserId !== req.userId) {
                 const err = new Error('Not authorized');
                 err.statusCode = 401;
                 throw err;
@@ -228,7 +228,7 @@ module.exports.deletePost = async (req, res, next) => {
         .catch(err => {
             err.statusCode ??= 500;
             next(err);
-        }); 
+        });
 };
 
 module.exports.participate = async (req, res, next) => {
@@ -237,15 +237,24 @@ module.exports.participate = async (req, res, next) => {
     const joinOrCancel = req.query.join;
 
     if (!joinOrCancel) {
-        return res.status(400).json({ message: "joinOrCancel is not defined" });
+        const err = new Error("joinOrCancel is not defined");
+        err.statusCode = 400;
+        throw err;
     }
 
-    return await Post
+    let foundPost;
+    return Post
         .findByPk(postId, {
             attributes: ['maxParticipants', 'dueDate']
         })
-        .then(async result => {
-            const exists = await Participant.findOne(
+        .then(result => {
+            if(!result){
+                const err = new Error('No such post');
+                err.statusCode = 404;
+                throw err;
+            }
+            foundPost=result;
+            return Participant.findOne(
                 {
                     where: {
                         PostId: postId,
@@ -253,37 +262,81 @@ module.exports.participate = async (req, res, next) => {
                     }
                 }
             );
+        })
+        .then(exists => {
             // Cancel from gather
             if (joinOrCancel === '0') {
                 if (!exists) {
-                    throw new Error();
+                    const err= new Error('You are not in participated');
+                    err.statusCode = 400;
+                    throw err;
                 }
-                return await Participant
+                return Participant
                     .destroy({
                         where: { PostId: postId, UserId: userId }
                     })
-                    .then(() => {
+                    .then(destroyed => {
+                        if (!destroyed) {
+                            throw new Error('Failed to cancel participate');
+                        }
                         return res.status(200).json({ message: 'Canceled successfull' });
                     });
+            }else{
+                if(exists){
+                    const err = new Error('You are already participated');
+                    err.statusCode = 400;
+                    throw err;
+                }
             }
-            if (new Date() > new Date(result.getValuesDedup().dueDate)) {
-                throw new Error();
+        })
+        .then(result => {
+            if(joinOrCancel === '0'){
+                return result;
             }
-            const { count } = await Participant.findAndCountAll({
+            if (new Date() > new Date(foundPost.getValuesDedup().dueDate)) {
+                const err = new Error('The due date is over');
+                err.statusCode = 400;
+                throw err;
+            }
+            return Participant.findAndCountAll({
                 where: { postId: postId }
             });
-            if (count == result.getValuesDedup().maxParticipants) {
-                throw new Error();
+        })
+        .then(result => {
+            if(joinOrCancel === '0'){
+                return result;
             }
-            await Post.update({
-                maxParticipants: result.getValuesDedup().maxParticipants + 1
+            if (result === foundPost.getValuesDedup().maxParticipants) {
+                const err = new Error('The party is full');
+                err.statusCode = 400;
+                throw err;
+            }
+            return Post.update({
+                maxParticipants: foundPost.getValuesDedup().maxParticipants + 1
             }, { where: { id: postId } });
-            return await Participant
-                .create({ PostId: postId, UserId: userId, good: 0 })
-                .then(() => res.status(200).json({ message: 'Joined successfull' }));
+        })
+        .then(result => {
+            if(joinOrCancel === '0'){
+                return result;
+            }
+            if(!result[0]){
+                const err = new Error('Faild to update participants');
+                throw err;
+            }
+            return Participant.create({ PostId: postId, UserId: userId, good: 0 });
+        })
+        .then(result => {
+            if(joinOrCancel === '0'){
+                return result;
+            }
+            if(!result){
+                const err = new Error('Faild to participate');
+                throw err;
+            }
+            return res.status(200).json({ message: 'Joined successfull' });
         })
         .catch(err => {
-            console.log(err);
-            return res.status(400).json({ message: 'An error occured. Please try again' });
+            err.statusCode ??= 500;
+            next(err);
         });
 };
