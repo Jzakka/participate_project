@@ -8,7 +8,7 @@ router.get('/', postController.getPosts);
 
 router.get('/:postId', postController.getPost);
 
-router.post('/', postController.addPost);
+router.post('/', isAuth, postController.addPost);
 
 router.put('/:postId', isAuth, postController.updatePost);
 

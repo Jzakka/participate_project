@@ -85,7 +85,7 @@ module.exports.getPost = async (req, res, next) => {
 
 // TODO 태그와 연관 짓는 데에 너무 많은 쿼리가 나감
 module.exports.addPost = async (req, res, next) => {
-    const userId = req.body.userId;
+    const userId = req.userId;
     const boardId = req.body.boardId;
     const title = req.body.title;
     const tags = req.body.tags;
