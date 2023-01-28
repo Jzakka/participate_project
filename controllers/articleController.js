@@ -14,25 +14,27 @@ module.exports.getArticles = async (req, res, next) => {
             .then(articles => {
                 return res.status(200).json(articles);
             })
-            .catch((err) => {
-                console.log(err);
-                return res.status(500).json({ message: 'An error occured' });
+            .catch(err => {
+                err.statusCode ??= 500;
+                next(err);
             });
     } else {
-        return await User
+        return User
             .findByPk(req.userId, { include: Tag })
             .then(foundUser => {
-                return newsapi.v2
-                    .topHeadlines({
-                        q: foundUser.Tags.map(tag => tag.tagName)
-                    })
-                    .then(articles => {
-                        return res.status(200).json(articles);
-                    })
-                    .catch((err) => {
-                        console.log(err);
-                        return res.status(500).json({ message: 'An error occured' });
-                    });
+                if (!foundUser) {
+                    const err = new Error('No such user');
+                    err.statusCode = 404;
+                    throw err;
+                }
+                return newsapi.v2.topHeadlines({ q: foundUser.Tags.map(tag => tag.tagName) });
+            })
+            .then(articles => {
+                return res.status(200).json(articles);
+            })
+            .catch(err => {
+                err.statusCode ??= 500;
+                next(err);
             });
     }
 };
