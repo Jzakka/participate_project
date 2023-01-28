@@ -4,7 +4,7 @@ const {isAuth} = require('../middleware/is-auth');
 
 const router = express.Router();
 
-router.post('/', commentController.addComment);
+router.post('/', isAuth, commentController.addComment);
 
 router.get('/', commentController.getComments);
 

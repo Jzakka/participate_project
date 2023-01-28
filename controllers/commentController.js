@@ -6,7 +6,7 @@ const Sequelize = require('sequelize-values')();
 
 module.exports.addComment = async (req, res, next) => {
     const postId = req.body.postId;
-    const userId = req.body.userId;
+    const userId = req.userId;
     const commentId = req.body.commentId;
     const context = req.body.context;
     // const post = await Post.findByPk(postId);
@@ -21,7 +21,7 @@ module.exports.addComment = async (req, res, next) => {
     if (!(await User.findByPk(userId) && await Post.findByPk(postId))) {
         const err = new Error('Could not find user and post');
         err.statusCode = 404;
-        throw err;
+        next(err);
     }
     let createdComment;
     return Comment
