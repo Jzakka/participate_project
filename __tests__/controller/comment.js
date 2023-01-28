@@ -6,7 +6,7 @@ const association = require('../../models/association/association');
 const sequelize = require('../../database/in-memory');
 const app = require('../../app');
 
-let userId1, userId2, boardId, postId1, postId2;
+let userId1, userId2, boardId, postId1, postId2, token;
 
 beforeEach(async () => {
     await association();
@@ -27,6 +27,18 @@ beforeEach(async () => {
         })
         .then(({ body }) => {
             userId1 = body.UserId;
+        });
+    await request(app)
+        .post('/login')
+        .set('Accept', 'application/json')
+        .type('application/json')
+        .send({
+            email: 'test@test.com',
+            password: '1234'
+        })
+        .expect(200)
+        .then(({ body }) => {
+            token = body.token;
         });
     await request(app)
         .post('/users')
@@ -54,17 +66,18 @@ beforeEach(async () => {
     await request(app)
         .post('/posts')
         .set('Accept', 'application/json')
+        .set('Authorization', 'Bearer '+token)
         .type('application/json')
         .send({
             tags: ['aaa', 'bbb', 'ccc'],
             title: 'TestPost1',
-            userId: userId1,
             boardId: boardId,
             context: 'Anything ...',
         })
         .then(({ body }) => {
             postId1 = body.PostId;
-        });;
+        });
+
 });
 
 describe('CommentTest', () => {
@@ -72,10 +85,10 @@ describe('CommentTest', () => {
         await request(app)
             .post('/comments')
             .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' + token)
             .type('application/json')
             .send({
                 postId: postId1,
-                userId: userId1,
                 context: 'This is comment'
             })
             .expect(201);
@@ -85,10 +98,10 @@ describe('CommentTest', () => {
         await request(app)
             .post('/comments')
             .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' + token)
             .type('application/json')
             .send({
                 postId: postId1,
-                userId: userId1,
                 context: 'This is comment'
             })
             .then(({ body }) => {
@@ -98,11 +111,11 @@ describe('CommentTest', () => {
         await request(app)
             .post('/comments')
             .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' + token)
             .type('application/json')
             .send({
                 commentId: commentId,
                 postId: postId1,
-                userId: userId1,
                 context: 'SubComments'
             })
             .expect(201);
@@ -112,51 +125,51 @@ describe('CommentTest', () => {
         await request(app)
             .post('/comments')
             .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' + token)
             .type('application/json')
             .send({
                 postId: postId1,
-                userId: userId1,
                 context: 'This is comment1'
             })
             .then(({ body }) => { commentId1 = body.CommentId; });
         await request(app)
             .post('/comments')
             .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' + token)
             .type('application/json')
             .send({
                 commentId: commentId1,
                 postId: postId1,
-                userId: userId1,
                 context: 'SubComments'
             });
         await request(app)
             .post('/comments')
             .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' + token)
             .type('application/json')
             .send({
                 postId: postId1,
-                userId: userId1,
                 context: 'This is comment2'
             })
             .then(({ body }) => { commentId2 = body.CommentId; });;
         await request(app)
             .post('/comments')
             .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' + token)
             .type('application/json')
             .send({
                 commentId: commentId2,
                 postId: postId1,
-                userId: userId1,
                 context: 'SubComments2'
             });
         await request(app)
             .post('/comments')
             .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' + token)
             .type('application/json')
             .send({
                 commentId: commentId2,
                 postId: postId1,
-                userId: userId1,
                 context: 'SubComments3'
             });
         await request(app)
@@ -174,10 +187,10 @@ describe('CommentTest', () => {
         await request(app)
             .post('/comments')
             .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' + token)
             .type('application/json')
             .send({
                 postId: postId1,
-                userId: userId1,
                 context: 'This is comment1'
             })
             .then(({ body }) => { commentId1 = body.CommentId; });
@@ -204,16 +217,15 @@ describe('CommentTest', () => {
             });
         await agent
             .post('/comments')
-            .set('Authorization', 'Bearer '+token)
+            .set('Authorization', 'Bearer ' + token)
             .send({
                 postId: postId1,
-                userId: userId1,
                 context: 'This is comment1'
             })
             .then(({ body }) => { commentId1 = body.CommentId; });
         await agent
             .put('/comments/' + commentId1)
-            .set('Authorization', 'Bearer '+token)
+            .set('Authorization', 'Bearer ' + token)
             .send({
                 context: 'Updated Comment'
             })
@@ -242,16 +254,16 @@ describe('CommentTest', () => {
         await request(app)
             .post('/comments')
             .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' + token)
             .type('application/json')
             .send({
                 postId: postId1,
-                userId: userId1,
                 context: 'This is comment1'
             })
             .then(({ body }) => { commentId1 = body.CommentId; });
         await request(app)
             .put('/comments/' + commentId1)
-            .set('Authorization', 'Bearer '+token)
+            .set('Authorization', 'Bearer ' + token)
             .send({
                 deleted: 'Y'
             })
