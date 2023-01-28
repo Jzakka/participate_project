@@ -126,8 +126,8 @@ describe('UserTest', () => {
         await request(app)
             .get('/users/' + userId)
             .expect(200)
-            .then(({body})=>{
-                assert.deepStrictEqual(body,{
+            .then(({ body }) => {
+                assert.deepStrictEqual(body, {
                     id: userId,
                     email: 'test@test.com',
                     username: 'testuser',
@@ -143,7 +143,7 @@ describe('UserTest', () => {
     });
 
     test('deleteUser-success', async () => {
-        let userId;
+        let userId, token;
         await request(app)
             .post('/users')
             .set('Accept', 'application/json')
@@ -158,14 +158,28 @@ describe('UserTest', () => {
                 userId = res.body.UserId;
             });
         await request(app)
+            .post('/login')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test@test.com',
+                password: '1234'
+            })
+            .expect(200)
+            .then(({ body }) => {
+                token = body.token;
+            });
+        await request(app)
             .delete('/users/' + userId)
+            .set('Authorization', 'Bearer ' + token)
             .expect(200)
             .then(res => {
                 assert.equal(res.body.message, 'Deleted user successfull');
             });
     });
 
-    test('deleteUser-failed', async () => {
+    test('deleteUser-failed-not-authorized', async () => {
+        let token;
         await request(app)
             .post('/users')
             .set('Accept', 'application/json')
@@ -173,18 +187,30 @@ describe('UserTest', () => {
             .send({
                 email: 'test@test.com',
                 username: 'testuser',
+                password: '1234',
+                confirmPassword: '1234'
+            })
+            .expect(201);
+        await request(app)
+            .post('/login')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test@test.com',
                 password: '1234'
             })
+            .expect(200)
+            .then(({ body }) => {
+                token = body.token;
+            });
         await request(app)
             .delete('/users/' + 404)
-            .expect(404)
-            .then(res => {
-                assert.equal(res.body.message, 'No such user');
-            });
+            .set('Authorization', 'Bearer ' + token)
+            .expect(401);
     });
 
     test('updateUser-success', async () => {
-        let userId;
+        let userId, token;
         await request(app)
             .post('/users')
             .set('Accept', 'application/json')
@@ -199,8 +225,21 @@ describe('UserTest', () => {
                 userId = res.body.UserId;
             });
         await request(app)
+            .post('/login')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test@test.com',
+                password: '1234'
+            })
+            .expect(200)
+            .then(({ body }) => {
+                token = body.token;
+            });
+        await request(app)
             .put('/users/' + userId)
             .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' + token)
             .type('application/json')
             .send({
                 username: 'pikachu',
@@ -213,7 +252,7 @@ describe('UserTest', () => {
         await request(app)
             .get('/users/' + userId)
             .expect(200)
-            .then(({body}) => {
+            .then(({ body }) => {
                 assert.deepStrictEqual(body, {
                     id: userId,
                     email: 'test@test.com',
@@ -223,7 +262,7 @@ describe('UserTest', () => {
             });
     });
 
-    test('updateUser-failed', async () => {
+    test('updateUser-failed-not-authorized', async () => {        
         await request(app)
             .put('/users/' + 404)
             .set('Accept', 'application/json')
@@ -232,9 +271,6 @@ describe('UserTest', () => {
                 username: 'pikachu',
                 password: '9999'
             })
-            .expect(404)
-            .then(res => {
-                assert.equal(res.body.message, 'No such user');
-            });
+            .expect(401);
     });
 });
