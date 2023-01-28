@@ -17,7 +17,7 @@ module.exports.postLogin = async (req, res, next) => {
         .then(foundUser => {
             if (!foundUser) {
                 const error = new Error('No such user');
-                error.statusCode = 401;
+                error.statusCode = 404;
                 throw error;
             }
             loadedUser = foundUser;
