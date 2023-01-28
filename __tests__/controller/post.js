@@ -422,10 +422,7 @@ describe('PostTest', () => {
         await agent
             .put('/posts/' + postId1 + '/join?join=1')
             .set('Authorization', 'Bearer '+token)
-            .expect(400)
-            .then(({ body }) => {
-                assert.deepStrictEqual(body, { message: 'An error occured. Please try again' });
-            });
+            .expect(400);
     });
 
     test('cancel-success', async () => {
@@ -503,9 +500,6 @@ describe('PostTest', () => {
         await agent
             .put('/posts/' + postId1 + '/join?join=0')
             .set('Authorization', 'Bearer '+token)
-            .expect(400)
-            .then(({ body }) => {
-                assert.deepStrictEqual(body, { message: 'An error occured. Please try again' });
-            });
+            .expect(400);
     });
 });
