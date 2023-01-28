@@ -75,10 +75,16 @@ module.exports.addUser = async (req, res, next) => {
         });
 };
 
-module.exports.deleteUser = async (req, res, next) => {
+module.exports.deleteUser = (req, res, next) => {
     const userId = req.params.userId;
 
-    User.findByPk(userId)
+    if (userId !== req.userId.toString()) {
+        const err = new Error('Not authorized');
+        err.statusCode = 401;
+        throw err;
+    }
+
+    return User.findByPk(userId)
         .then(user => {
             if (!user) {
                 const err = new Error('No such user');
@@ -104,8 +110,15 @@ module.exports.deleteUser = async (req, res, next) => {
         });
 };
 
-module.exports.updateUser = async (req, res, next) => {
+module.exports.updateUser = (req, res, next) => {
     const userId = req.params.userId;
+
+    if (userId !== req.userId.toString()) {
+        const err = new Error('Not authorized');
+        err.statusCode = 401;
+        throw err;
+    }
+
     const email = req.body.email;
     const username = req.body.username;
     const password = req.body.password;
@@ -121,7 +134,7 @@ module.exports.updateUser = async (req, res, next) => {
         updatedUserInfo.password = password;
     }
 
-    User.findByPk(userId)
+    return User.findByPk(userId)
         .then(user => {
             if (!user) {
                 const err = new Error('No such user');
