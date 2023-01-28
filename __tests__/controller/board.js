@@ -5,12 +5,36 @@ const sequelize = require('../../database/in-memory');
 
 const app = require('../../app');
 
+let token;
+
 beforeEach(async () => {
     association();
-    return await sequelize
+    await sequelize
         .sync({ force: true })
         .catch(err => {
             console.log(err);
+        });
+    await request(app)
+        .post('/users')
+        .set('Accept', 'application/json')
+        .type('application/json')
+        .send({
+            email: 'admin@test.com',
+            username: 'testuser',
+            password: '1234',
+            confirmPassword: '1234'
+        })
+    await request(app)
+        .post('/login')
+        .set('Accept', 'application/json')
+        .type('application/json')
+        .send({
+            email: 'admin@test.com',
+            password: '1234'
+        })
+        .expect(200)
+        .then(({ body }) => {
+            token = body.token;
         });
 });
 
@@ -19,6 +43,7 @@ describe('BoardTest', () => {
         await request(app)
             .post('/boards')
             .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' +token)
             .type('application/json')
             .send({
                 boardName: 'NewBoard'
@@ -29,6 +54,7 @@ describe('BoardTest', () => {
         await request(app)
             .post('/boards')
             .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' +token)
             .type('application/json')
             .send({
                 boardName: 'NewBoard'
@@ -46,6 +72,7 @@ describe('BoardTest', () => {
         await request(app)
             .post('/boards')
             .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' +token)
             .type('application/json')
             .send({
                 boardName: 'NewBoard'
@@ -55,6 +82,7 @@ describe('BoardTest', () => {
             });
         await request(app)
             .delete('/boards/' + boardId)
+            .set('Authorization', 'Bearer ' +token)
             .expect(200)
             .then(res => {
                 assert.deepStrictEqual(res.body, { message: 'Deleted board successfull' });
@@ -63,6 +91,7 @@ describe('BoardTest', () => {
     test('deleteBoard-fail', async () => {
         await request(app)
             .delete('/boards/' + 404)
+            .set('Authorization', 'Bearer ' +token)
             .expect(404)
             .then(res => {
                 assert.deepStrictEqual(res.body, { message: 'Failed to delete board' });
