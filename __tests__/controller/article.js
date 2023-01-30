@@ -22,8 +22,8 @@ beforeEach(async () => {
         .send({
             email: 'test@test.com',
             username: 'testuser',
-            password: '1234',
-            confirmPassword: '1234'
+            password: 'password486',
+            confirmPassword: 'password486'
         })
         .then(({ body }) => {
             userId1 = body.UserId;
@@ -35,8 +35,8 @@ beforeEach(async () => {
         .send({
             email: 'test2@test.com',
             username: 'testuser2',
-            password: '1234',
-            confirmPassword: '1234'
+            password: 'password486',
+            confirmPassword: 'password486'
         })
         .then(({ body }) => {
             userId2 = body.UserId;
@@ -90,14 +90,14 @@ describe('ArticleTest', () => {
                 body.should.have.properties(['status', 'totalResults', 'articles']);
             });
     });
-    test('getArticles-login', async () => {
+    test('getArticles-login-with-tags', async () => {
         const agent = request.agent(app);
         let token;
         await agent
             .post('/login')
             .send({
                 email:'test@test.com',
-                password: '1234'
+                password: 'password486'
             })
             .then(({body})=>{
                 token = body.token;
@@ -122,6 +122,27 @@ describe('ArticleTest', () => {
             .send({
                 userId: userId1,
                 tagName: 'space'
+            });
+        await agent
+            .get('/articles')
+            .set('Authorization', 'Bearer '+token)
+            .expect(200)
+            .then(({ body }) => {
+                console.log(body);
+                body.should.have.properties(['status', 'totalResults', 'articles']);
+            });
+    });
+    test('getArticles-login-no-tags', async () => {
+        const agent = request.agent(app);
+        let token;
+        await agent
+            .post('/login')
+            .send({
+                email:'test@test.com',
+                password: 'password486'
+            })
+            .then(({body})=>{
+                token = body.token;
             });
         await agent
             .get('/articles')
