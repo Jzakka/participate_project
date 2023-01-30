@@ -39,7 +39,7 @@ beforeEach(async () => {
 });
 
 describe('BoardTest', () => {
-    test('addBoard', async () => {
+    test('addBoard-success', async () => {
         await request(app)
             .post('/boards')
             .set('Accept', 'application/json')
@@ -49,6 +49,17 @@ describe('BoardTest', () => {
                 boardName: 'NewBoard'
             })
             .expect(201)
+    });
+    test('addBoard-fail-less-than-3letters', async () => {
+        await request(app)
+            .post('/boards')
+            .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' +token)
+            .type('application/json')
+            .send({
+                boardName: 'aa'
+            })
+            .expect(422)
     });
     test('getBoards', async () => {
         await request(app)
