@@ -283,8 +283,7 @@ describe('UserTest', () => {
             .set('Authorization', 'Bearer ' + token)
             .type('application/json')
             .send({
-                username: 'pikachu',
-                password: 'qlalfqjsgh123'
+                username: 'pikachu'
             })
             .expect(200)
             .then(res => {
@@ -303,14 +302,51 @@ describe('UserTest', () => {
             });
     });
 
+    test('updateUser-success', async () => {
+        let userId, token;
+        await request(app)
+            .post('/users')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test@test.com',
+                username: 'testuser',
+                password: 'qlalfqjsgh123',
+                confirmPassword: 'qlalfqjsgh123'
+            })
+            .then(res => {
+                userId = res.body.UserId;
+            });
+        await request(app)
+            .post('/login')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test@test.com',
+                password: 'qlalfqjsgh123'
+            })
+            .expect(200)
+            .then(({ body }) => {
+                token = body.token;
+            });
+        await request(app)
+            .put('/users/' + userId)
+            .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' + token)
+            .type('application/json')
+            .send({
+                username: 'no'
+            })
+            .expect(422);
+    });
+
     test('updateUser-failed-not-authorized', async () => {        
         await request(app)
             .put('/users/' + 404)
             .set('Accept', 'application/json')
             .type('application/json')
             .send({
-                username: 'pikachu',
-                password: 'qlalfqjsgh123'
+                username: 'pikachu'
             })
             .expect(401);
     });
