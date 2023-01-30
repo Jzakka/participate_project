@@ -1,10 +1,19 @@
 const _ = require('lodash');
+const {validationResult} = require('express-validator/check');
+
 const Post = require('../models/post');
 const User = require('../models/user');
 const Comment = require('../models/comment');
 const Sequelize = require('sequelize-values')();
 
 module.exports.addComment = async (req, res, next) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        const err = new Error('Entered data is incorrect');
+        err.statusCode = 422;
+        err.data = errors.array();
+        next(err);
+    }
     const postId = req.body.postId;
     const userId = req.userId;
     const commentId = req.body.commentId;
