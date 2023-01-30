@@ -21,8 +21,8 @@ beforeEach(async () => {
         .send({
             email: 'admin@test.com',
             username: 'testuser',
-            password: '1234',
-            confirmPassword: '1234'
+            password: 'password486',
+            confirmPassword: 'password486'
         })
     await request(app)
         .post('/login')
@@ -30,7 +30,7 @@ beforeEach(async () => {
         .type('application/json')
         .send({
             email: 'admin@test.com',
-            password: '1234'
+            password: 'password486'
         })
         .expect(200)
         .then(({ body }) => {

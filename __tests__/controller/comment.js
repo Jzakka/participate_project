@@ -22,9 +22,10 @@ beforeEach(async () => {
         .send({
             email: 'test@test.com',
             username: 'testuser',
-            password: '1234',
-            confirmPassword: '1234'
+            password: 'password486',
+            confirmPassword: 'password486'
         })
+        .expect(201)
         .then(({ body }) => {
             userId1 = body.UserId;
         });
@@ -34,7 +35,7 @@ beforeEach(async () => {
         .type('application/json')
         .send({
             email: 'test@test.com',
-            password: '1234'
+            password: 'password486'
         })
         .expect(200)
         .then(({ body }) => {
@@ -47,9 +48,10 @@ beforeEach(async () => {
         .send({
             email: 'test2@test.com',
             username: 'testuser2',
-            password: '1234',
-            confirmPassword: '1234'
+            password: 'password486',
+            confirmPassword: 'password486'
         })
+        .expect(201)
         .then(({ body }) => {
             userId2 = body.UserId;
         });
@@ -60,16 +62,17 @@ beforeEach(async () => {
         .send({
             email: 'admin@test.com',
             username: 'testuser',
-            password: '1234',
-            confirmPassword: '1234'
-        });
+            password: 'password486',
+            confirmPassword: 'password486'
+        })
+        .expect(201);
     await request(app)
         .post('/login')
         .set('Accept', 'application/json')
         .type('application/json')
         .send({
             email: 'admin@test.com',
-            password: '1234'
+            password: 'password486'
         })
         .expect(200)
         .then(({ body }) => {
@@ -83,9 +86,10 @@ beforeEach(async () => {
         .send({
             boardName: 'NewBoard'
         })
+        .expect(201)
         .then(({ body }) => {
-            boardId = body.UserId;
-        });;
+            boardId = body.BoardId;
+        });
     await request(app)
         .post('/posts')
         .set('Accept', 'application/json')
@@ -97,6 +101,7 @@ beforeEach(async () => {
             boardId: boardId,
             context: 'Anything ...',
         })
+        .expect(201)
         .then(({ body }) => {
             postId1 = body.PostId;
         });
@@ -255,7 +260,7 @@ describe('CommentTest', () => {
             .type('application/json')
             .send({
                 email: 'test@test.com',
-                password: '1234'
+                password: 'password486'
             })
             .then(({ body }) => {
                 token = body.token;
@@ -291,7 +296,7 @@ describe('CommentTest', () => {
             .type('application/json')
             .send({
                 email: 'test@test.com',
-                password: '1234'
+                password: 'password486'
             })
             .then(({ body }) => {
                 token = body.token;
@@ -327,7 +332,7 @@ describe('CommentTest', () => {
             .type('application/json')
             .send({
                 email: 'test@test.com',
-                password: '1234'
+                password: 'password486'
             })
             .then(({ body }) => {
                 token = body.token;
@@ -357,7 +362,7 @@ describe('CommentTest', () => {
             .type('application/json')
             .send({
                 email: 'test@test.com',
-                password: '1234'
+                password: 'password486'
             })
             .then(({ body }) => {
                 token = body.token;
