@@ -78,7 +78,7 @@ beforeEach(async () => {
     await request(app)
         .post('/boards')
         .set('Accept', 'application/json')
-        .set('Authorization', 'Bearer '+token)
+        .set('Authorization', 'Bearer ' + token)
         .type('application/json')
         .send({
             boardName: 'NewBoard'
@@ -307,17 +307,80 @@ describe('CommentTest', () => {
             })
             .then(({ body }) => { commentId1 = body.CommentId; });
         await request(app)
-            .put('/comments/' + commentId1)
+            .delete('/comments/' + commentId1)
             .set('Authorization', 'Bearer ' + token)
-            .send({
-                deleted: 'Y'
-            })
             .expect(200);
         await request(app)
             .get('/comments/' + commentId1)
             .expect(200)
             .then(({ body }) => {
                 body.should.have.value('deleted', 'Y');
+                body.should.have.value('context', 'Deleted comment');
             });
+    });
+    test('updateComment-fail-no-context', async () => {
+        let commentId1, token;
+        const agent = request.agent(app);
+        await agent
+            .post('/login')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test@test.com',
+                password: '1234'
+            })
+            .then(({ body }) => {
+                token = body.token;
+            });
+        await request(app)
+            .post('/comments')
+            .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' + token)
+            .type('application/json')
+            .send({
+                postId: postId1,
+                context: 'This is comment1'
+            })
+            .then(({ body }) => { commentId1 = body.CommentId; });
+        await request(app)
+            .put('/comments/' + commentId1)
+            .set('Authorization', 'Bearer ' + token)
+            .send({})
+            .expect(422);
+    });
+    test('updateComment-fail-comment-deleted', async () => {
+        let commentId1, token;
+        const agent = request.agent(app);
+        await agent
+            .post('/login')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test@test.com',
+                password: '1234'
+            })
+            .then(({ body }) => {
+                token = body.token;
+            });
+        await request(app)
+            .post('/comments')
+            .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' + token)
+            .type('application/json')
+            .send({
+                postId: postId1,
+                context: 'This is comment1'
+            })
+            .then(({ body }) => { commentId1 = body.CommentId; });
+        await request(app)
+            .delete('/comments/' + commentId1)
+            .set('Authorization', 'Bearer ' + token);
+        await request(app)
+            .put('/comments/' + commentId1)
+            .set('Authorization', 'Bearer ' + token)
+            .send({
+                context: 'It should be error'
+            })
+            .expect(404);
     });
 });
