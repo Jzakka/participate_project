@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-
+const {validationResult} = require('express-validator');
 const User = require('../models/user');
 const Tag = require('../models/tag');
 
@@ -43,19 +43,18 @@ module.exports.getUser = async (req, res, next) => {
         });
 };
 
-module.exports.addUser = async (req, res, next) => {
+module.exports.addUser = (req, res, next) => {
+    const error = validationResult(req);
+    if(!error.isEmpty()){
+        const err= new Error('Input data is invalid');
+        err.statusCode = 422;
+        err.data= error.array();
+        throw err;
+    }
+
     const email = req.body.email;
     const username = req.body.username;
     const password = req.body.password;
-    const confirmPassword = req.body.confirmPassword;
-
-    if (await User.findOne({ where: { email: email } })) {
-        return res.status(400).json({ message: 'The email is already used' });
-    }
-
-    if (password !== confirmPassword) {
-        return res.status(400).json({ message: 'Passwords are not match' });
-    }
 
     return bcrypt
         .hash(password, 12)
