@@ -1,4 +1,6 @@
 const _ = require('lodash');
+const { validationResult } = require('express-validator');
+
 const Post = require('../models/post');
 const Tag = require('../models/tag');
 const Participant = require('../models/participant');
@@ -85,6 +87,14 @@ module.exports.getPost = async (req, res, next) => {
 
 // TODO 태그와 연관 짓는 데에 너무 많은 쿼리가 나감
 module.exports.addPost = async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        const err = new Error('Input data is invalid');
+        err.statusCode = 422;
+        err.data = errors.array();
+        next(err);
+    }
+
     const userId = req.userId;
     const boardId = req.body.boardId;
     const title = req.body.title;
@@ -102,18 +112,7 @@ module.exports.addPost = async (req, res, next) => {
         maxParticipants: maxParticipants
     };
 
-    const tagObjects = [];
-    if (tags) {
-        for (let tag of tags) {
-            await Tag
-                .findOrCreate({
-                    where: { tagName: tag }
-                })
-                .then(([tagValue]) => {
-                    tagObjects.push(tagValue);
-                });
-        }
-    }
+    const tagObjects = [];   
     Post
         .create(post)
         .then(newPost => {
@@ -129,8 +128,22 @@ module.exports.addPost = async (req, res, next) => {
             }
             return newPost;
         })
-        .then(newPost => {
-            newPost.setTags(tagObjects);
+        .then(async result => {
+            if (tags) {
+                for (let tag of tags) {
+                    await Tag
+                        .findOrCreate({
+                            where: { tagName: tag }
+                        })
+                        .then(([tagValue]) => {
+                            tagObjects.push(tagValue);
+                        });
+                }
+            }
+            return result;
+        })
+        .then(async newPost => {
+            await newPost.setTags(tagObjects);
             return newPost;
         })
         .then(newPost => {
@@ -143,6 +156,14 @@ module.exports.addPost = async (req, res, next) => {
 };
 
 module.exports.updatePost = async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        const err = new Error('Input data is invalid');
+        err.statusCode = 422;
+        err.data = errors.array();
+        next(err);
+    }
+
     const postId = req.params.postId;
     const title = req.body.title;
     const tags = req.body.tags;
@@ -156,17 +177,6 @@ module.exports.updatePost = async (req, res, next) => {
     };
 
     const tagObjects = [];
-    if (tags) {
-        for (let tag of tags) {
-            await Tag
-                .findOrCreate({
-                    where: { tagName: tag }
-                })
-                .then(([tagValue]) => {
-                    tagObjects.push(tagValue);
-                });
-        }
-    }
 
     let foundPost;
     Post.findByPk(postId)
@@ -184,11 +194,24 @@ module.exports.updatePost = async (req, res, next) => {
             foundPost = result;
             return Post.update(post, { where: { id: postId } });
         })
-        .then(result => {
+        .then(async result => {
             if (!result[0]) {
                 const err = new Error('Failed to update post');
                 throw err;
             }
+            if (tags) {
+                for (let tag of tags) {
+                    await Tag
+                        .findOrCreate({
+                            where: { tagName: tag }
+                        })
+                        .then(([tagValue]) => {
+                            tagObjects.push(tagValue);
+                        });
+                }
+            }
+        })
+        .then(result=>{
             foundPost
                 .setTags(tagObjects)
                 .then(() => {
@@ -248,12 +271,12 @@ module.exports.participate = async (req, res, next) => {
             attributes: ['maxParticipants', 'dueDate']
         })
         .then(result => {
-            if(!result){
+            if (!result) {
                 const err = new Error('No such post');
                 err.statusCode = 404;
                 throw err;
             }
-            foundPost=result;
+            foundPost = result;
             return Participant.findOne(
                 {
                     where: {
@@ -267,7 +290,7 @@ module.exports.participate = async (req, res, next) => {
             // Cancel from gather
             if (joinOrCancel === '0') {
                 if (!exists) {
-                    const err= new Error('You are not in participated');
+                    const err = new Error('You are not in participated');
                     err.statusCode = 400;
                     throw err;
                 }
@@ -281,8 +304,8 @@ module.exports.participate = async (req, res, next) => {
                         }
                         return res.status(200).json({ message: 'Canceled successfull' });
                     });
-            }else{
-                if(exists){
+            } else {
+                if (exists) {
                     const err = new Error('You are already participated');
                     err.statusCode = 400;
                     throw err;
@@ -290,7 +313,7 @@ module.exports.participate = async (req, res, next) => {
             }
         })
         .then(result => {
-            if(joinOrCancel === '0'){
+            if (joinOrCancel === '0') {
                 return result;
             }
             if (new Date() > new Date(foundPost.getValuesDedup().dueDate)) {
@@ -303,7 +326,7 @@ module.exports.participate = async (req, res, next) => {
             });
         })
         .then(result => {
-            if(joinOrCancel === '0'){
+            if (joinOrCancel === '0') {
                 return result;
             }
             if (result === foundPost.getValuesDedup().maxParticipants) {
@@ -316,20 +339,20 @@ module.exports.participate = async (req, res, next) => {
             }, { where: { id: postId } });
         })
         .then(result => {
-            if(joinOrCancel === '0'){
+            if (joinOrCancel === '0') {
                 return result;
             }
-            if(!result[0]){
+            if (!result[0]) {
                 const err = new Error('Faild to update participants');
                 throw err;
             }
             return Participant.create({ PostId: postId, UserId: userId, good: 0 });
         })
         .then(result => {
-            if(joinOrCancel === '0'){
+            if (joinOrCancel === '0') {
                 return result;
             }
-            if(!result){
+            if (!result) {
                 const err = new Error('Faild to participate');
                 throw err;
             }
