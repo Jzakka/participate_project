@@ -143,6 +143,28 @@ describe('CommentTest', () => {
             })
             .expect(201);
     });
+    test('addComment-fail-no-postId', async () => {
+        await request(app)
+            .post('/comments')
+            .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' + token)
+            .type('application/json')
+            .send({
+                context: 'This is comment'
+            })
+            .expect(422);
+    });
+    test('addComment-fail-no-context', async () => {
+        await request(app)
+            .post('/comments')
+            .set('Accept', 'application/json')
+            .set('Authorization', 'Bearer ' + token)
+            .type('application/json')
+            .send({
+                postId: postId1
+            })
+            .expect(422);
+    });
     test('getComments', async () => {
         let commentId1, commentId2;
         await request(app)
