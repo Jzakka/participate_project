@@ -20,8 +20,7 @@ router.post('/', [
             });
     }).normalizeEmail(),
     body('username').isLength({min:3}),
-    body('password')
-        .isLength({ min: 8 }).isAlphanumeric().trim(),
+    body('password').isLength({ min: 8 }).isAlphanumeric().trim(),
     body('confirmPassword').custom((value, { req }) => {
         if (value !== req.body.password) {
             throw new Error('Password length should be at leaset 8 and combination of alphabet and number');
@@ -36,6 +35,8 @@ router.get('/', userController.getUsers);
 
 router.delete('/:userId', isAuth, userController.deleteUser);
 
-router.put('/:userId', isAuth, userController.updateUser);
+router.put('/:userId', isAuth, [
+    body('username').isLength({min:3})
+],userController.updateUser);
 
 module.exports = router;

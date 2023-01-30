@@ -110,27 +110,20 @@ module.exports.deleteUser = (req, res, next) => {
 };
 
 module.exports.updateUser = (req, res, next) => {
+    const error = validationResult(req);
+    if(!error.isEmpty()){
+        const err= new Error('Input data is invalid');
+        err.statusCode = 422;
+        err.data= error.array();
+        throw err;
+    }
+
     const userId = req.params.userId;
 
     if (userId !== req.userId.toString()) {
         const err = new Error('Not authorized');
         err.statusCode = 401;
         throw err;
-    }
-
-    const email = req.body.email;
-    const username = req.body.username;
-    const password = req.body.password;
-
-    const updatedUserInfo = {};
-    if (email) {
-        updatedUserInfo.email = email;
-    }
-    if (username) {
-        updatedUserInfo.username = username;
-    }
-    if (password) {
-        updatedUserInfo.password = password;
     }
 
     return User.findByPk(userId)
@@ -143,7 +136,7 @@ module.exports.updateUser = (req, res, next) => {
         })
         .then(result => {
             return User
-                .update(updatedUserInfo, {
+                .update({username:req.body.username}, {
                     where: {
                         id: userId
                     }
