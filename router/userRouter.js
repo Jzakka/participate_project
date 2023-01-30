@@ -19,6 +19,7 @@ router.post('/', [
                 return true;
             });
     }).normalizeEmail(),
+    body('username').isLength({min:3}),
     body('password')
         .isLength({ min: 8 }).isAlphanumeric().trim(),
     body('confirmPassword').custom((value, { req }) => {
