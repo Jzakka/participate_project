@@ -151,5 +151,12 @@ describe('TagTest', () => {
             .then(({ body }) => {
                 body.Tags.map(tag => tag.tagName).should.containDeep(['newTag']);
             });
-    })
+    });
+    test('addTag-fail-no-tagName', async () => {
+        await request(app)
+            .post('/tags')
+            .set('Authorization', 'Bearer ' + token)
+            .send({})
+            .expect(422);
+    });
 });
