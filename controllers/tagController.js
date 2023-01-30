@@ -1,3 +1,5 @@
+const {validationResult} = require('express-validator');
+
 const User = require('../models/user');
 const Board = require('../models/board');
 const Post = require('../models/post');
@@ -42,7 +44,13 @@ module.exports.getTags = async (req, res, next) => {
         });
 };
 
-module.exports.addTag = async (req, res, next) => {
+module.exports.addTag = (req, res, next) => {
+    if(!validationResult(req).isEmpty()){
+        const err = new Error('TagName cannot be blank');
+        err.statusCode=422;
+        throw err;
+    }
+
     const tagName = req.body.tagName;
     const userId = req.userId;
     const boardId = req.body.boardId;
