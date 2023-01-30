@@ -1,3 +1,4 @@
+const {validationResult} = require('express-validator/check');
 require('dotenv').config();
 
 const Board = require('../models/board');
@@ -18,6 +19,12 @@ module.exports.getBoards = async (req, res, next) => {
 };
 
 module.exports.addBoard = (req, res, next) => {
+    const errors  = validationResult(req);
+    if(!errors.isEmpty()){
+        const err = new Error("Invalid board's name");
+        err.statusCode = 422;
+        throw err;
+    }
     const boardName = req.body.boardName;
 
     User.findByPk(req.userId)
