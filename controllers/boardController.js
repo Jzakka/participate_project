@@ -1,4 +1,4 @@
-const {validationResult} = require('express-validator/check');
+const {validationResult} = require('express-validator');
 require('dotenv').config();
 
 const Board = require('../models/board');
