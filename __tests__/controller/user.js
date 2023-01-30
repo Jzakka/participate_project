@@ -24,10 +24,51 @@ describe('UserTest', () => {
             .send({
                 email: 'test@test.com',
                 username: 'testuser',
-                password: '1234',
-                confirmPassword: '1234'
+                password: 'qlalfqjsgh123',
+                confirmPassword: 'qlalfqjsgh123'
             })
             .expect(201);
+    });
+
+    test('addUser-fail-password-invalid', async () => {
+        await request(app)
+            .post('/users')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test@test.com',
+                username: 'testuser',
+                password: '333',
+                confirmPassword: '333'
+            })
+            .expect(422);
+    });
+
+    test('addUser-fail-email-invalid', async () => {
+        await request(app)
+            .post('/users')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'testtest.com',
+                username: 'testuser',
+                password: 'qlalfqjsgh123',
+                confirmPassword: 'qlalfqjsgh123'
+            })
+            .expect(422);
+    });
+
+    test('addUser-fail-username-invalid', async () => {
+        await request(app)
+            .post('/users')
+            .set('Accept', 'application/json')
+            .type('application/json')
+            .send({
+                email: 'test@test.com',
+                password: 'qlalfqjsgh123',
+                confirmPassword: 'qlalfqjsgh123'
+            })
+            .expect(422);
     });
 
     test('addUser-fail-password-not-match', async () => {
@@ -38,10 +79,10 @@ describe('UserTest', () => {
             .send({
                 email: 'test@test.com',
                 username: 'testuser',
-                password: '1234',
-                confirmPassword: '1241'
+                password: 'qlalfqjsgh111',
+                confirmPassword: 'qlalfqjsghghghgh33'
             })
-            .expect(400);
+            .expect(422);
     });
 
     test('addUser-fail-email-already-used', async () => {
@@ -52,8 +93,8 @@ describe('UserTest', () => {
             .send({
                 email: 'test@test.com',
                 username: 'testuser',
-                password: '1234',
-                confirmPassword: '1234'
+                password: 'qlalfqjsgh123',
+                confirmPassword: 'qlalfqjsgh123'
             });
         await request(app)
             .post('/users')
@@ -62,10 +103,10 @@ describe('UserTest', () => {
             .send({
                 email: 'test@test.com',
                 username: 'testuser',
-                password: '1234',
-                confirmPassword: '1234'
+                password: 'qlalfqjsgh123',
+                confirmPassword: 'qlalfqjsgh123'
             })
-            .expect(400);
+            .expect(422);
     });
 
     test('getUsers', async () => {
@@ -77,8 +118,8 @@ describe('UserTest', () => {
             .send({
                 email: 'test@test.com',
                 username: 'testuser',
-                password: '1234',
-                confirmPassword: '1234'
+                password: 'qlalfqjsgh123',
+                confirmPassword: 'qlalfqjsgh123'
             });
         await request(app)
             .post('/users')
@@ -87,8 +128,8 @@ describe('UserTest', () => {
             .send({
                 email: 'test2@test.com',
                 username: 'testuser2',
-                password: '1234',
-                confirmPassword: '1234'
+                password: 'qlalfqjsgh123',
+                confirmPassword: 'qlalfqjsgh123'
             })
             .then(({ body }) => {
                 userId = body.UserId;
@@ -116,8 +157,8 @@ describe('UserTest', () => {
             .send({
                 email: 'test@test.com',
                 username: 'testuser',
-                password: '1234',
-                confirmPassword: '1234'
+                password: 'qlalfqjsgh123',
+                confirmPassword: 'qlalfqjsgh123'
             })
             .expect(201)
             .then(res => {
@@ -151,8 +192,8 @@ describe('UserTest', () => {
             .send({
                 email: 'test@test.com',
                 username: 'testuser',
-                password: '1234',
-                confirmPassword: '1234'
+                password: 'qlalfqjsgh123',
+                confirmPassword: 'qlalfqjsgh123'
             })
             .then(res => {
                 userId = res.body.UserId;
@@ -163,7 +204,7 @@ describe('UserTest', () => {
             .type('application/json')
             .send({
                 email: 'test@test.com',
-                password: '1234'
+                password: 'qlalfqjsgh123'
             })
             .expect(200)
             .then(({ body }) => {
@@ -187,8 +228,8 @@ describe('UserTest', () => {
             .send({
                 email: 'test@test.com',
                 username: 'testuser',
-                password: '1234',
-                confirmPassword: '1234'
+                password: 'qlalfqjsgh123',
+                confirmPassword: 'qlalfqjsgh123'
             })
             .expect(201);
         await request(app)
@@ -197,7 +238,7 @@ describe('UserTest', () => {
             .type('application/json')
             .send({
                 email: 'test@test.com',
-                password: '1234'
+                password: 'qlalfqjsgh123'
             })
             .expect(200)
             .then(({ body }) => {
@@ -218,8 +259,8 @@ describe('UserTest', () => {
             .send({
                 email: 'test@test.com',
                 username: 'testuser',
-                password: '1234',
-                confirmPassword: '1234'
+                password: 'qlalfqjsgh123',
+                confirmPassword: 'qlalfqjsgh123'
             })
             .then(res => {
                 userId = res.body.UserId;
@@ -230,7 +271,7 @@ describe('UserTest', () => {
             .type('application/json')
             .send({
                 email: 'test@test.com',
-                password: '1234'
+                password: 'qlalfqjsgh123'
             })
             .expect(200)
             .then(({ body }) => {
@@ -243,7 +284,7 @@ describe('UserTest', () => {
             .type('application/json')
             .send({
                 username: 'pikachu',
-                password: '9999'
+                password: 'qlalfqjsgh123'
             })
             .expect(200)
             .then(res => {
@@ -269,7 +310,7 @@ describe('UserTest', () => {
             .type('application/json')
             .send({
                 username: 'pikachu',
-                password: '9999'
+                password: 'qlalfqjsgh123'
             })
             .expect(401);
     });
