@@ -124,22 +124,24 @@ module.exports.getComment = async (req, res, next) => {
         });
 };
 
-module.exports.updateComment = async (req, res, next) => {
+module.exports.updateComment =  (req, res, next) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        const err= new Error('Entered data is invalid');
+        err.statusCode = 422;
+        throw err;
+    }
     const commentId = req.params.commentId;
     const context = req.body.context;
-    const deleted = req.body.deleted;
 
     const query = {};
     if (context) {
         query.context = context;
     }
-    if (deleted) {
-        query.deleted = deleted;
-    }
 
     Comment.findByPk(commentId)
         .then(result => {
-            if (!result) {
+            if (!result || result.deleted === 'Y') {
                 const err = new Error('No such commnet');
                 err.statusCode = 404;
                 throw err;
@@ -158,6 +160,41 @@ module.exports.updateComment = async (req, res, next) => {
             }
             return res.status(200).json({
                 message: 'Updated comment successfull'
+            });
+        })
+        .catch(err => {
+            err.statusCode = err.statusCode || 500;
+            next(err);
+        });
+};
+
+module.exports.deleteComment =  (req, res, next) => {
+    const commentId = req.params.commentId;
+
+    Comment.findByPk(commentId)
+        .then(result => {
+            if (!result) {
+                const err = new Error('No such commnet');
+                err.statusCode = 404;
+                throw err;
+            }
+            if(result.UserId !== req.userId){
+                const err = new Error('Not Authorized');
+                err.statusCode = 401;
+                throw err;
+            }
+            return Comment.update({
+                context: 'Deleted comment',
+                deleted: 'Y'
+            }, { where: { id: commentId } });
+        })
+        .then(result => {
+            if (!result[0]) {
+                const err = new Error('Delete failed');
+                throw err;
+            }
+            return res.status(200).json({
+                message: 'Deleted comment successfull'
             });
         })
         .catch(err => {
