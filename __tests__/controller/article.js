@@ -104,18 +104,21 @@ describe('ArticleTest', () => {
             });
         await agent
             .post('/tags')
+            .set('Authorization', 'Baerer '+token)
             .send({
                 userId: userId1,
                 tagName: 'bitcoin'
             });
         await agent
             .post('/tags')
+            .set('Authorization', 'Baerer '+token)
             .send({
                 userId: userId1,
                 tagName: 'america'
             });
         await agent
             .post('/tags')
+            .set('Authorization', 'Baerer '+token)
             .send({
                 userId: userId1,
                 tagName: 'space'

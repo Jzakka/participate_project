@@ -42,42 +42,37 @@ beforeEach(async () => {
             userId2 = body.UserId;
         });
     await request(app)
+        .post('/users')
+        .set('Accept', 'application/json')
+        .type('application/json')
+        .send({
+            email: 'admin@test.com',
+            username: 'testuser',
+            password: '1234',
+            confirmPassword: '1234'
+        });
+    await request(app)
+        .post('/login')
+        .set('Accept', 'application/json')
+        .type('application/json')
+        .send({
+            email: 'admin@test.com',
+            password: '1234'
+        })
+        .expect(200)
+        .then(({ body }) => {
+            token = body.token;
+        });
+    await request(app)
         .post('/boards')
         .set('Accept', 'application/json')
+        .set('Authorization', 'Bearer ' + token)
         .type('application/json')
         .send({
             boardName: 'NewBoard'
         })
         .then(({ body }) => {
             boardId = body.BoardId;
-        });
-    await request(app)
-        .post('/posts')
-        .set('Accept', 'application/json')
-        .type('application/json')
-        .send({
-            tags: ['aaa', 'bbb', 'ccc'],
-            title: 'TestPost1',
-            userId: 1,
-            boardId: 1,
-            context: 'Anything ...',
-        })
-        .then(({ body }) => {
-            postId1 = body.PostId;
-        });
-    await request(app)
-        .post('/posts')
-        .set('Accept', 'application/json')
-        .type('application/json')
-        .send({
-            tags: ['test', 'tags', 'forTest'],
-            title: 'TestPost2',
-            userId: 1,
-            boardId: 1,
-            context: 'Anything ...',
-        })
-        .then(({ body }) => {
-            postId2 = body.PostId;
         });
     await request(app)
         .post('/login')
@@ -89,6 +84,34 @@ beforeEach(async () => {
         })
         .then(({ body }) => {
             token = body.token;
+        });
+    await request(app)
+        .post('/posts')
+        .set('Accept', 'application/json')
+        .set('Authorization', 'Bearer ' + token)
+        .type('application/json')
+        .send({
+            tags: ['aaa', 'bbb', 'ccc'],
+            title: 'TestPost1',
+            boardId: 1,
+            context: 'Anything ...',
+        })
+        .then(({ body }) => {
+            postId1 = body.PostId;
+        });
+    await request(app)
+        .post('/posts')
+        .set('Accept', 'application/json')
+        .set('Authorization', 'Bearer ' + token)
+        .type('application/json')
+        .send({
+            tags: ['test', 'tags', 'forTest'],
+            title: 'TestPost2',
+            boardId: 1,
+            context: 'Anything ...',
+        })
+        .then(({ body }) => {
+            postId2 = body.PostId;
         });
 });
 
@@ -118,7 +141,7 @@ describe('TagTest', () => {
     test('addTag-success', async () => {
         await request(app)
             .post('/tags')
-            .set('Authorization', 'Bearer '+token)
+            .set('Authorization', 'Bearer ' + token)
             .send({
                 tagName: 'newTag'
             });

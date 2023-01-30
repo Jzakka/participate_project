@@ -52,10 +52,33 @@ beforeEach(async () => {
         })
         .then(({ body }) => {
             userId2 = body.UserId;
-        });;
+        });
+    await request(app)
+        .post('/users')
+        .set('Accept', 'application/json')
+        .type('application/json')
+        .send({
+            email: 'admin@test.com',
+            username: 'testuser',
+            password: '1234',
+            confirmPassword: '1234'
+        });
+    await request(app)
+        .post('/login')
+        .set('Accept', 'application/json')
+        .type('application/json')
+        .send({
+            email: 'admin@test.com',
+            password: '1234'
+        })
+        .expect(200)
+        .then(({ body }) => {
+            token = body.token;
+        });
     await request(app)
         .post('/boards')
         .set('Accept', 'application/json')
+        .set('Authorization', 'Bearer '+token)
         .type('application/json')
         .send({
             boardName: 'NewBoard'
@@ -66,7 +89,7 @@ beforeEach(async () => {
     await request(app)
         .post('/posts')
         .set('Accept', 'application/json')
-        .set('Authorization', 'Bearer '+token)
+        .set('Authorization', 'Bearer ' + token)
         .type('application/json')
         .send({
             tags: ['aaa', 'bbb', 'ccc'],
