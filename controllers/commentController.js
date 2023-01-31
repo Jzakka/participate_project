@@ -103,10 +103,10 @@ module.exports.getComments = async (req, res, next) => {
         });
 };
 
-module.exports.getComment = async (req, res, next) => {
+module.exports.getComment = (req, res, next) => {
     const commentId = req.params.commentId;
 
-    return await Comment
+    return Comment
         .findByPk(commentId, {
             include: Comment
         })
@@ -174,7 +174,7 @@ module.exports.deleteComment =  (req, res, next) => {
     Comment.findByPk(commentId)
         .then(result => {
             if (!result) {
-                const err = new Error('No such commnet');
+                const err = new Error('No such comment');
                 err.statusCode = 404;
                 throw err;
             }
@@ -190,8 +190,7 @@ module.exports.deleteComment =  (req, res, next) => {
         })
         .then(result => {
             if (!result[0]) {
-                const err = new Error('Delete failed');
-                throw err;
+                throw new Error('Delete failed');
             }
             return res.status(200).json({
                 message: 'Deleted comment successfull'

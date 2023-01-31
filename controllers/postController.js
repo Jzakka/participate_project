@@ -155,13 +155,13 @@ module.exports.addPost = async (req, res, next) => {
         });
 };
 
-module.exports.updatePost = async (req, res, next) => {
+module.exports.updatePost = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         const err = new Error('Input data is invalid');
         err.statusCode = 422;
         err.data = errors.array();
-        next(err);
+        throw err;
     }
 
     const postId = req.params.postId;
@@ -224,7 +224,7 @@ module.exports.updatePost = async (req, res, next) => {
         });
 };
 
-module.exports.deletePost = async (req, res, next) => {
+module.exports.deletePost = (req, res, next) => {
     const postId = req.params.postId;
 
     Post.findByPk(postId)
